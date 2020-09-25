@@ -1,18 +1,28 @@
 package gui;
 
- import java.awt.BorderLayout;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.*;
+import java.io.IOException;
+import java.net.Socket;
 
 import javax.swing.*;
+
+import problemdomain.ClientConnection;
+import problemdomain.Message;
  
 public class ClientGUI {
-	
 	private JFrame frame;
 	
 	private JList chatList;
 	private DefaultListModel chatListModel;
+	JTextField inputMessage;
+	
+	private String username;
+	private ClientConnection connection;
+	Socket socket;
 	
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
@@ -36,7 +46,12 @@ public class ClientGUI {
 		
 		this.frame.add(gamePanel, BorderLayout.CENTER);
 		this.frame.add(chatPanel, BorderLayout.EAST);
+		
 		display();
+		
+		username = JOptionPane.showInputDialog(this.frame, "Enter username: ");
+		
+		connectToNetwork();
 	}
 	
 	private JPanel createClientPanel()
@@ -62,7 +77,7 @@ public class ClientGUI {
 		{
 			JButton button = new JButton();
 			//button.setPreferredSize(new Dimension(30, 40));
-			button.setBackground(Color.BLUE);
+			button.setBackground(Color.LIGHT_GRAY);
 			
 			centerPanel.add(button);
 		}
@@ -129,9 +144,11 @@ public class ClientGUI {
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		
-		JTextField inputMessage = new JTextField();
+		inputMessage = new JTextField();
 		Font font = new Font("SansSerif", Font.PLAIN, 15);
 		inputMessage.setFont(font);
+		
+		sendButton.addActionListener(new sendButtonListener());
 		
 		typePanel.add(inputMessage, BorderLayout.CENTER);
 		typePanel.add(sendButton, BorderLayout.SOUTH);
@@ -140,6 +157,47 @@ public class ClientGUI {
 		panel.add(typePanel, BorderLayout.SOUTH);
 
 		return panel;
+	}
+	
+	private void connectToNetwork() {
+	
+		try {
+			socket = new Socket("localhost", 1234);
+
+			connection = new ClientConnection(socket, this);
+			Thread thread = new Thread(connection);
+			thread.start();
+			
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+	}
+	
+	private class sendButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent a) {
+			
+			String input = inputMessage.getText();
+			
+			while (input.equals("")) {
+				
+				try {
+					Thread.sleep(1);
+				} 
+				catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			Message message = new Message(username, input);
+			connection.sendMessageToServer(message);		
+		}
+	}
+	
+	public void addMessage(Message message) {
+		
+		this.chatListModel.addElement(message);
 	}
 	
 	public void display() {

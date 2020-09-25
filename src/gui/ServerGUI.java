@@ -4,6 +4,8 @@ import java.awt.*;
 
 import javax.swing.*;
 
+import problemdomain.Server;
+
 public class ServerGUI {
 
 	private JFrame frame;
@@ -18,6 +20,7 @@ public class ServerGUI {
 	private DefaultListModel gameListModel;
 
 	public ServerGUI() {
+
 		frame = new JFrame("BattleShip Server");
 		JPanel monitor = new JPanel(new GridLayout(2, 1));
 
@@ -37,6 +40,8 @@ public class ServerGUI {
 		this.frame.add(trafficPanel, BorderLayout.CENTER);
 		this.frame.add(monitor, BorderLayout.WEST);
 		display();
+		
+		new Server();
 	}
 
 	public JPanel createTrafficPanel() {
