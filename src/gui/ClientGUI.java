@@ -6,12 +6,15 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.*;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 import javax.swing.*;
 
-import problemdomain.ClientConnection;
-import problemdomain.Message;
+import problemdomain.*;
  
 public class ClientGUI {
 	private JFrame frame;
@@ -21,8 +24,9 @@ public class ClientGUI {
 	JTextField inputMessage;
 	
 	private String username;
-	private ClientConnection connection;
 	Socket socket;
+	private ObjectOutputStream objectOutputStream;
+	private ObjectInputStream objectInputStream;
 	
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
@@ -163,14 +167,23 @@ public class ClientGUI {
 	
 		try {
 			socket = new Socket("localhost", 1234);
-
-			connection = new ClientConnection(socket, this);
-			Thread thread = new Thread(connection);
+			
+			this.addMessage("Connected!");
+			
+			OutputStream outputStream = socket.getOutputStream();
+			objectOutputStream = new ObjectOutputStream(outputStream);
+			
+			InputStream inputStream = socket.getInputStream();
+			objectInputStream = new ObjectInputStream(inputStream);
+			
+			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
+			Thread thread = new Thread(serverConnection);
 			thread.start();
 			
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		} 
+		catch (IOException e1) {
+			e1.printStackTrace();
+			this.addMessage("Unable to Connect.");
 		}
 	}
 	
@@ -179,23 +192,33 @@ public class ClientGUI {
 		@Override
 		public void actionPerformed(ActionEvent a) {
 			
-			String input = inputMessage.getText();
+			String text = inputMessage.getText();
 			
-			while (input.equals("")) {
+			Message send = new Message(username, text);
+			
+			try {
+				objectOutputStream.writeObject(send);
 				
-				try {
-					Thread.sleep(1);
-				} 
-				catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				inputMessage.setText("");
+				
+				addMessage(send.toString());
+				
+//				Message receive = (Message) objectInputStream.readObject();
+//				
+//				this.addMessage(receive.toString());
 			}
-			Message message = new Message(username, input);
-			connection.sendMessageToServer(message);		
+//			catch (ClassNotFoundException e1) {
+//				e1.printStackTrace();
+//			}
+			catch (IOException e1) 
+			{
+				e1.printStackTrace();
+				addMessage("Unable to send message.");
+			}
 		}
 	}
 	
-	public void addMessage(Message message) {
+	public void addMessage(String message) {
 		
 		this.chatListModel.addElement(message);
 	}

@@ -1,30 +1,67 @@
 package problemdomain;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+
 public class Server {
-	
-	private ServerSocket serverSocket;
-	private ArrayList<ServerConnection> connections;
-	
+
+	private ArrayList<ClientConnection> connections;
+
 	public Server() {
-		try {
-			serverSocket = new ServerSocket(1234);
-			while (true) {
-				Socket socket = serverSocket.accept();
-				
-				ServerConnection sc = new ServerConnection(socket, this);
-				Thread thread = new Thread(sc);
-				thread.start();
-				connections.add(sc);
+
+		this.connections = new ArrayList<>();
+
+	}
+
+	public void connectToNetwork() throws IOException {
+
+		ServerSocket listener = new ServerSocket(1234);
+
+		while (listener.isBound()) {
+			try {
+				Socket client = listener.accept();
+
+				System.out.println("Client connected.");
+
+				InputStream inputStream = client.getInputStream();
+				ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+
+				OutputStream outputStream = client.getOutputStream();
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+
+				System.out.println("Waiting for messages...");
+
+				ClientConnection connection = new ClientConnection(client, objectInputStream, objectOutputStream);
+				connections.add(connection);
+
+				if (connections.size()%2 == 0) {
+
+					ClientConnection connection1 = connections.get(0);
+					ClientConnection connection2 = connections.get(1);
+
+					GameConnection gameConnection = new GameConnection(connection1, connection2);
+					Thread thread = new Thread(gameConnection);
+					thread.start();
+
+					connections.remove(0);
+					connections.remove(1);
+
+				}
+
 			}
-			
-		}
-		catch (IOException e) {
-			e.printStackTrace();
+
+			catch (IOException ex) {
+
+				listener.close();
+			}
+
 		}
 	}
 

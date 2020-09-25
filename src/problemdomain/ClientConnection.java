@@ -1,105 +1,42 @@
 package problemdomain;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 
-import gui.ClientGUI;
-
-public class ClientConnection implements Runnable {
-
-	ClientGUI client;
-	Socket socket;
-	private OutputStream os;
-	private ObjectOutputStream oos;
-	private InputStream is;
+public class ClientConnection {
+	
+	private Socket socket;
 	private ObjectInputStream ois;
-
-	public ClientConnection (Socket socket, ClientGUI client) {
+	private ObjectOutputStream oos;
+	
+	public ClientConnection(Socket socket, ObjectInputStream ois, ObjectOutputStream oos) {
 
 		this.socket = socket;
-		this.client = client;
+		this.ois = ois;
+		this.oos = oos;
 	}
 
-	public void sendMessageToServer(Message message) {
-
-		try {
-			oos.writeObject(message);
-		} 
-		catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-	
-	public Message receiveMessageFromServer() {
-		
-		Message input = new Message("Server", "Unable to send message");
-		try {
-			input = (Message) ois.readObject();
-			client.addMessage(input);
-		} 
-		catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		return input;
+	/**
+	 * @return the socket
+	 */
+	public Socket getSocket() {
+		return socket;
 	}
 
-	@Override
-	public void run() {
-		 
-		try {
-			
-			os = socket.getOutputStream();
-			oos = new ObjectOutputStream(os);
+	/**
+	 * @return the ois
+	 */
+	public ObjectInputStream getOis() {
+		return ois;
+	}
 
-			is = socket.getInputStream();
-			ois = new ObjectInputStream(ois);
-
-			while (ois.available() == 0) {
-
-				try {
-					Thread.sleep(1);
-				} 
-				catch (InterruptedException e) {
-
-					e.printStackTrace();
-					close();
-				}
-			}
-
-			while (socket.isConnected()) {
-
-				receiveMessageFromServer();	
-			}
-			 
-		 }
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+	/**
+	 * @return the oos
+	 */
+	public ObjectOutputStream getOos() {
+		return oos;
 	}
 	
-	public void close() {
-		
-		try {
-			
-			oos.close();
-			ois.close();
-			socket.close();
-			
-		} 
-		catch (IOException e) {
 
-			e.printStackTrace();
-		}
-	}
 }
-

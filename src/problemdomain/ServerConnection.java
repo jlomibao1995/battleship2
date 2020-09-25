@@ -3,90 +3,40 @@ package problemdomain;
 import java.io.*;
 import java.net.Socket;
 
+import gui.ClientGUI;
+
 public class ServerConnection implements Runnable {
 
-	private Socket socket;
-	private OutputStream os;
-	private ObjectOutputStream oos;
-	private InputStream is;
+	private Socket server;
+	private ClientGUI client;
 	private ObjectInputStream ois;
-	Server server;
 
-	boolean shouldRun = true;
-
-	public ServerConnection(Socket socket, Server server) {
-
-		this.socket = socket;
+	
+	public ServerConnection(ClientGUI client, ObjectInputStream ois, Socket server) {
 		this.server = server;
-	}
-	
-	private void sendMessageToClient(Message message) {
-		
-		try {
-			oos.writeObject(message);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void receiveMessageFromClient() {
-
-		try {
-			Message input = (Message) ois.readObject();
-			sendMessageToClient(input);
-		} 
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+		this.client = client;
+		this.ois = ois;
 	}
 
 	@Override
 	public void run() {
 
-		try {
-
-			os = socket.getOutputStream();
-			oos = new ObjectOutputStream(os);
-
-			is = socket.getInputStream();
-			ois = new ObjectInputStream(is);
-			
-			while(ois.available() == 0) {
+		while (!server.isClosed())
+		{
+			Message receive;
+			try {
+				receive = (Message) ois.readObject();
+				client.addMessage(receive.toString());
 				
-				try {
-					Thread.sleep(1);
-				} 
-				catch (InterruptedException e) {
-					e.printStackTrace();
-					close();
-				}
+			} 
+			catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
 			}
 			
-			while (socket.isConnected()) {
-				
-				receiveMessageFromClient();
-			}
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void close() {
-
-		try {
-
-			oos.close();
-			ois.close();
-			socket.close();
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.*;
+import java.io.IOException;
 
 import javax.swing.*;
 
@@ -41,7 +42,13 @@ public class ServerGUI {
 		this.frame.add(monitor, BorderLayout.WEST);
 		display();
 		
-		new Server();
+		Server server = new Server();
+		try {
+			server.connectToNetwork();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public JPanel createTrafficPanel() {
