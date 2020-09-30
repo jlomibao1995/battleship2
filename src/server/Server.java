@@ -1,4 +1,4 @@
-package problemdomain;
+package server;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,18 +9,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import problemdomain.Message;
+
 
 public class Server {
 
-	private ArrayList<ClientConnection> connections;
+	//private ArrayList<ClientConnection> connections;
+	ServerGUI serverGUI;
 
-	public Server() {
+	public Server(ServerGUI server) {
 
-		this.connections = new ArrayList<>();
+		//this.connections = new ArrayList<>();
+		this.serverGUI = server;
 
 	}
 
 	public void connectToNetwork() throws IOException {
+		
+		ArrayList<ClientConnection> connections = new ArrayList<>() ;
 
 		ServerSocket listener = new ServerSocket(1234);
 
@@ -28,41 +34,46 @@ public class Server {
 			try {
 				Socket client = listener.accept();
 
-				System.out.println("Client connected.");
+				//server.addMessage("Client connected.");
 
 				InputStream inputStream = client.getInputStream();
 				ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 
 				OutputStream outputStream = client.getOutputStream();
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+				
+				Message username = (Message) objectInputStream.readObject();
+				this.serverGUI.addMessage(username.toString());
 
 				System.out.println("Waiting for messages...");
 
-				ClientConnection connection = new ClientConnection(client, objectInputStream, objectOutputStream);
+				ClientConnection connection = new ClientConnection(client, objectInputStream, objectOutputStream, username.getUsername());
 				connections.add(connection);
 
-				if (connections.size()%2 == 0) {
-
+				if (connections.size() % 2 == 0) {
 					ClientConnection connection1 = connections.get(0);
 					ClientConnection connection2 = connections.get(1);
-
-					GameConnection gameConnection = new GameConnection(connection1, connection2);
-					Thread thread = new Thread(gameConnection);
+					
+					GameConnection game = new GameConnection(this.serverGUI, connection1, connection2);
+					Thread thread = new Thread(game);
+					
 					thread.start();
-
-					connections.remove(0);
-					connections.remove(1);
-
+					
+					connections.remove(connection1);
+					connections.remove(connection2);
 				}
 
 			}
 
 			catch (IOException ex) {
 
-				listener.close();
+			} 
+			catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
-
 		}
+		
+		listener.close();
 	}
 
 }

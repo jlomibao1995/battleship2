@@ -1,6 +1,7 @@
 package problemdomain;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Message implements Serializable {
@@ -13,6 +14,7 @@ public class Message implements Serializable {
 		
 		this.username = username;
 		this.message = message;
+		this.date = new Date();
 	}
 
 	/**
@@ -45,7 +47,9 @@ public class Message implements Serializable {
 	
 	public String toString() {
 		
-		String formatted = String.format("[%s] %s: %s", date, username, message);
+		SimpleDateFormat dateFormatted = new SimpleDateFormat("h:mm a");
+		
+		String formatted = String.format("[%s] %s: %s", dateFormatted.format(date), username, message);
 		
 		return formatted;
 	}

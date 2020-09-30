@@ -1,4 +1,4 @@
-package gui;
+package client;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -35,7 +35,7 @@ public class ClientGUI {
 		
 		this.frame = new JFrame("Battleship");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.frame.setSize(700, 800);
+		this.frame.setSize(600, 800);
 		this.frame.setLayout(new BorderLayout());
 		
 		JPanel gamePanel = new JPanel(new GridLayout(2, 1));
@@ -49,13 +49,11 @@ public class ClientGUI {
 		gamePanel.add(opponentPanel);
 		
 		this.frame.add(gamePanel, BorderLayout.CENTER);
-		this.frame.add(chatPanel, BorderLayout.EAST);
+		this.frame.add(chatPanel, BorderLayout.SOUTH);
 		
 		display();
 		
 		username = JOptionPane.showInputDialog(this.frame, "Enter username: ");
-		
-		connectToNetwork();
 	}
 	
 	private JPanel createClientPanel()
@@ -142,6 +140,18 @@ public class ClientGUI {
 		JPanel typePanel = new JPanel(new BorderLayout());
 		JButton sendButton = new JButton("Send");
 		
+		JPanel networkButtonPanel = new JPanel(new GridLayout(1,2));
+		JButton connectButton = new JButton("Connect");
+		JButton disconnectButton = new JButton("Disconnect");
+		
+		connectButton.addActionListener((ActionEvent a) -> {
+			connectToNetwork();
+		});
+		
+		disconnectButton.addActionListener((ActionEvent e) -> {
+			disconnectToNetwork();
+		});
+		
 		chatListModel = new DefaultListModel();
 		chatList = new JList(chatListModel);
 		JScrollPane scrollPane = new JScrollPane(chatList);
@@ -154,8 +164,12 @@ public class ClientGUI {
 		
 		sendButton.addActionListener(new sendButtonListener());
 		
+		networkButtonPanel.add(connectButton);
+		networkButtonPanel.add(disconnectButton);
+		
 		typePanel.add(inputMessage, BorderLayout.CENTER);
-		typePanel.add(sendButton, BorderLayout.SOUTH);
+		typePanel.add(sendButton, BorderLayout.EAST);
+		typePanel.add(networkButtonPanel, BorderLayout.SOUTH);
 		
 		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.add(typePanel, BorderLayout.SOUTH);
@@ -168,13 +182,17 @@ public class ClientGUI {
 		try {
 			socket = new Socket("localhost", 1234);
 			
-			this.addMessage("Connected!");
+			this.addMessage("Connected!                                                          "
+					+ "                                                                           ");
 			
 			OutputStream outputStream = socket.getOutputStream();
 			objectOutputStream = new ObjectOutputStream(outputStream);
 			
 			InputStream inputStream = socket.getInputStream();
 			objectInputStream = new ObjectInputStream(inputStream);
+			
+			Message username = new Message(this.username, "Connected!");
+			objectOutputStream.writeObject(username);
 			
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
@@ -184,6 +202,16 @@ public class ClientGUI {
 		catch (IOException e1) {
 			e1.printStackTrace();
 			this.addMessage("Unable to Connect.");
+		}
+	}
+	
+	private void disconnectToNetwork() {
+		try {
+			objectOutputStream.close();
+			objectInputStream.close();
+		} catch (IOException e) {
+
+			e.printStackTrace();
 		}
 	}
 	

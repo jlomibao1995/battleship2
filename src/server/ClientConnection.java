@@ -1,4 +1,4 @@
-package problemdomain;
+package server;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -9,12 +9,14 @@ public class ClientConnection {
 	private Socket socket;
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
+	private String username;
 	
-	public ClientConnection(Socket socket, ObjectInputStream ois, ObjectOutputStream oos) {
-
+	
+	public ClientConnection(Socket socket, ObjectInputStream ois, ObjectOutputStream oos, String username) {
 		this.socket = socket;
 		this.ois = ois;
 		this.oos = oos;
+		this.username = username;
 	}
 
 	/**
@@ -37,6 +39,15 @@ public class ClientConnection {
 	public ObjectOutputStream getOos() {
 		return oos;
 	}
+
+	/**
+	 * @return the username
+	 */
+	public String getUsername() {
+		return username;
+	}
+	
+	
 	
 
 }

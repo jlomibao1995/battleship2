@@ -1,9 +1,9 @@
-package problemdomain;
+package client;
 
 import java.io.*;
 import java.net.Socket;
 
-import gui.ClientGUI;
+import problemdomain.Message;
 
 public class ServerConnection implements Runnable {
 
@@ -23,14 +23,13 @@ public class ServerConnection implements Runnable {
 
 		while (!server.isClosed())
 		{
-			Message receive;
 			try {
-				receive = (Message) ois.readObject();
+				Message receive = (Message) ois.readObject();
 				client.addMessage(receive.toString());
 				
 			} 
 			catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
+
 				e.printStackTrace();
 			}
 			catch (IOException e) {

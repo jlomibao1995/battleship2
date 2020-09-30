@@ -1,6 +1,4 @@
-package application;
-
-import gui.ClientGUI;
+package client;
 
 public class ClientDriver {
 
