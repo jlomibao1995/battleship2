@@ -33,10 +33,10 @@ public class InputOutputHandler implements Runnable {
 
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+
 			}
 			catch (ClassNotFoundException e) {
-				e.printStackTrace();
+				
 			}
 		}
 

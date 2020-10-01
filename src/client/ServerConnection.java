@@ -2,7 +2,11 @@ package client;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
+import javax.swing.JPanel;
+
+import problemdomain.GridButton;
 import problemdomain.Message;
 
 public class ServerConnection implements Runnable {
@@ -33,7 +37,18 @@ public class ServerConnection implements Runnable {
 				e.printStackTrace();
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				
+				try {
+					ArrayList<GridButton> playerGrid = (ArrayList<GridButton>) ois.readObject();
+					this.client.addGridPanel(playerGrid);
+				}
+				catch (ClassNotFoundException a) {
+					
+				}
+				catch (IOException a) {
+					
+				}
+
 			}
 			
 		}

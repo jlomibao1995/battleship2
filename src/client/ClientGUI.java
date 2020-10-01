@@ -11,6 +11,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Random;
 
 import javax.swing.*;
 
@@ -18,6 +20,7 @@ import problemdomain.*;
  
 public class ClientGUI {
 	private JFrame frame;
+	JPanel mainPanel;
 	
 	private JList chatList;
 	private DefaultListModel chatListModel;
@@ -28,10 +31,15 @@ public class ClientGUI {
 	private ObjectOutputStream objectOutputStream;
 	private ObjectInputStream objectInputStream;
 	
+	private ArrayList<GridButton> playerGrid;
+	
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 	
 	public ClientGUI() {
+		
+		playerGrid = new ArrayList<>();
+		mainPanel = new JPanel(new BorderLayout(10, 10));
 		
 		this.frame = new JFrame("Battleship");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -59,7 +67,6 @@ public class ClientGUI {
 	private JPanel createClientPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
-		JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 		
@@ -75,11 +82,27 @@ public class ClientGUI {
 		
 		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
 		
+//		for (int y= 1; y <= 10; y++)
+//		{
+//			
+//			for (int x = 1; x <= 10; x++)
+//			{
+//				JButton button = new JButton();
+//				button.setBackground(Color.LIGHT_GRAY);
+//				
+//				playerGrid.add(new GridButton(button, x, y));
+//				
+//				centerPanel.add(button);
+//				
+//			}
+//		}
+		
 		for (int i= 0; i<100; i++)
 		{
 			JButton button = new JButton();
 			//button.setPreferredSize(new Dimension(30, 40));
 			button.setBackground(Color.LIGHT_GRAY);
+			button.setOpaque(true);
 			
 			centerPanel.add(button);
 		}
@@ -197,7 +220,6 @@ public class ClientGUI {
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
-			
 		} 
 		catch (IOException e1) {
 			e1.printStackTrace();
@@ -249,6 +271,20 @@ public class ClientGUI {
 	public void addMessage(String message) {
 		
 		this.chatListModel.addElement(message);
+	}
+	
+	public void addGridPanel(ArrayList<GridButton> playerGrid) {
+		
+		this.playerGrid = playerGrid;
+		
+		JPanel panel = new JPanel(new GridLayout(10, 10));
+		
+		for (int i = 1; i <= 100; i++)
+		{
+			panel.add(playerGrid.get(i).getButton());
+		}
+
+
 	}
 	
 	public void display() {
