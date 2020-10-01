@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -18,7 +20,7 @@ import javax.swing.*;
 
 import problemdomain.*;
  
-public class ClientGUI {
+public class ClientGUI implements PropertyChangeListener{
 	private JFrame frame;
 	
 	private JList chatList;
@@ -88,8 +90,16 @@ public class ClientGUI {
 			{
 				JButton button = new JButton();
 				button.setBackground(Color.LIGHT_GRAY);
+				GridButton gridButton = new GridButton(button, x, y);
 				
-				playerGrid.add(new GridButton(button, x, y));
+				button.addActionListener((ActionEvent a) -> {
+					String message = gridButton.clicked();
+					
+					Message attackMessage = new Message(this.username, message);
+					sendMessage(attackMessage);
+				});
+				
+				playerGrid.add(gridButton);
 				
 				centerPanel.add(button);
 				
@@ -174,7 +184,14 @@ public class ClientGUI {
 		Font font = new Font("SansSerif", Font.PLAIN, 15);
 		inputMessage.setFont(font);
 		
-		sendButton.addActionListener(new sendButtonListener());
+		sendButton.addActionListener((ActionEvent a) -> {
+			
+			String text = inputMessage.getText();
+			
+			Message send = new Message(username, text);
+			
+			sendMessage(send);
+		});
 		
 		networkButtonPanel.add(connectButton);
 		networkButtonPanel.add(disconnectButton);
@@ -194,8 +211,7 @@ public class ClientGUI {
 		try {
 			socket = new Socket("localhost", 1234);
 			
-			this.addMessage("Connected!                                                          "
-					+ "                                                                           ");
+			this.addMessage("Connected!");
 			
 			OutputStream outputStream = socket.getOutputStream();
 			objectOutputStream = new ObjectOutputStream(outputStream);
@@ -209,33 +225,13 @@ public class ClientGUI {
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
-			
-			boolean shipPlaced = false;
-
-			while (!shipPlaced) {
-				shipPlaced = placeShips(5, "Aircraft Carrier");
-			}
-			shipPlaced = false;
-			while (!shipPlaced) {
-				shipPlaced = placeShips(4, "Battleship");
-			}
-			shipPlaced = false;
-			while (!shipPlaced) {
-				shipPlaced = placeShips(3, "Cruiser");
-			}
-			shipPlaced = false;
-			while (!shipPlaced) {
-				shipPlaced = placeShips(3, "Submarine");
-			}
-			shipPlaced = false;
-			while (!shipPlaced) {
-				shipPlaced = placeShips(2, "Destroyer");
-			}
 		} 
 		catch (IOException e1) {
 			e1.printStackTrace();
 			this.addMessage("Unable to Connect.");
 		}
+		
+		makeShips();
 	}
 	
 	private void disconnectToNetwork() {
@@ -248,40 +244,48 @@ public class ClientGUI {
 		}
 	}
 	
-	private class sendButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent a) {
+	public void sendMessage(Message message) {
+		try {
+			objectOutputStream.writeObject(message);
 			
-			String text = inputMessage.getText();
+			inputMessage.setText("");
 			
-			Message send = new Message(username, text);
-			
-			try {
-				objectOutputStream.writeObject(send);
-				
-				inputMessage.setText("");
-				
-				addMessage(send.toString());
-				
-//				Message receive = (Message) objectInputStream.readObject();
-//				
-//				this.addMessage(receive.toString());
-			}
-//			catch (ClassNotFoundException e1) {
-//				e1.printStackTrace();
-//			}
-			catch (IOException e1) 
-			{
-				e1.printStackTrace();
-				addMessage("Unable to send message.");
-			}
+			addMessage(message.toString());
+		}
+		catch (IOException e1) 
+		{
+			e1.printStackTrace();
+			addMessage("Unable to send message.");
 		}
 	}
 	
 	public void addMessage(String message) {
 		
 		this.chatListModel.addElement(message);
+	} 
+	
+	public void makeShips() {
+		boolean shipPlaced = false;
+
+		while (!shipPlaced) {
+			shipPlaced = placeShips(5, "Aircraft Carrier");
+		}
+		shipPlaced = false;
+		while (!shipPlaced) {
+			shipPlaced = placeShips(4, "Battleship");
+		}
+		shipPlaced = false;
+		while (!shipPlaced) {
+			shipPlaced = placeShips(3, "Cruiser");
+		}
+		shipPlaced = false;
+		while (!shipPlaced) {
+			shipPlaced = placeShips(3, "Submarine");
+		}
+		shipPlaced = false;
+		while (!shipPlaced) {
+			shipPlaced = placeShips(2, "Destroyer");
+		}
 	}
 	
 	private boolean placeShips(int numberOfParts, String shipType) {
@@ -383,5 +387,11 @@ public class ClientGUI {
 	public void display() {
 		//this.frame.pack();
 		this.frame.setVisible(true);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent arg0) {
+		
+		
 	}
 }

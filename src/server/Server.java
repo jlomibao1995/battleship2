@@ -1,5 +1,6 @@
 package server;
 
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -16,7 +17,8 @@ import problemdomain.Message;
 public class Server {
 
 	//private ArrayList<ClientConnection> connections;
-	ServerGUI serverGUI;
+	private ServerGUI serverGUI;
+	private PropertyChangeSupport propertyChangeSupport;
 
 	public Server(ServerGUI server) {
 

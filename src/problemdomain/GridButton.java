@@ -2,6 +2,7 @@ package problemdomain;
 
 import javax.swing.JButton;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.Serializable;
 
 public class GridButton implements Serializable {
@@ -86,15 +87,12 @@ public class GridButton implements Serializable {
 		else 
 		{
 			button.setBackground(Color.YELLOW);
+			message = "Missed!";
 		}
 		
+		this.hit = true;
+		
 		return message;
-	}
-	
-	public String gotHit()
-	{
-			button.setBackground(Color.RED);
-			return "A ship has been hit!";
 	}
 
 }

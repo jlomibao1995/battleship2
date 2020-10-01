@@ -21,13 +21,14 @@ public class Ship {
 	
 	public String isDestroyed()
 	{
-		int counter = 0;
+		int counter = 1;
 		for (GridButton shipPart : shipParts)
 		{
 			if (shipPart.isHit())
 			{
 				counter++;
 			}
+			System.out.println(counter);
 		}
 		
 		if (counter == size)
