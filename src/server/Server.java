@@ -1,6 +1,6 @@
 package server;
 
-import java.beans.PropertyChangeSupport;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -10,28 +10,27 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import problemdomain.GridButton;
 import problemdomain.Message;
 
 
-public class Server {
+public class Server{
 
 	//private ArrayList<ClientConnection> connections;
 	private ServerGUI serverGUI;
-	private PropertyChangeSupport propertyChangeSupport;
+	private final int PORT = 1234;
 
 	public Server(ServerGUI server) {
 
 		//this.connections = new ArrayList<>();
 		this.serverGUI = server;
-
 	}
 
 	public void connectToNetwork() throws IOException {
 		
 		ArrayList<ClientConnection> connections = new ArrayList<>() ;
 
-		ServerSocket listener = new ServerSocket(1234);
+		ServerSocket listener = new ServerSocket(this.PORT);
+		this.serverGUI.addMessage("Listening on port: " + PORT);
 
 		while (listener.isBound()) {
 			try {
@@ -48,7 +47,7 @@ public class Server {
 				Message username = (Message) objectInputStream.readObject();
 				this.serverGUI.addMessage(username.toString());
 
-				System.out.println("Waiting for messages...");
+				this.serverGUI.addMessage("Waiting for players...");
 
 				ClientConnection connection = new ClientConnection(client, objectInputStream, objectOutputStream, username.getUsername());
 				connections.add(connection);
@@ -72,7 +71,6 @@ public class Server {
 
 			} 
 			catch (ClassNotFoundException e) {
-				e.printStackTrace();
 			}
 		}
 		

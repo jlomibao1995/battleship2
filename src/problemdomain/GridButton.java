@@ -2,22 +2,30 @@ package problemdomain;
 
 import javax.swing.JButton;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 
-public class GridButton implements Serializable {
+public class GridButton implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JButton button;
-	private int x_location;
-	private int y_location;
-	private boolean shipPart = false;
-	private boolean hit = false;	
+	private Integer x_location;
+	private Integer y_location;
+	private Boolean shipPart = new Boolean(false);
+	private Boolean hit = new Boolean(false);	
 	private Ship ship;
+	private PropertyChangeSupport propertyChangeSupport;
 
 	public GridButton(JButton button, int x_location, int y_location) {
 		this.button = button;
-		this.x_location = x_location;
-		this.y_location = y_location;
+		this.x_location = new Integer(x_location);
+		this.y_location = new Integer(y_location);
+		this.propertyChangeSupport = new PropertyChangeSupport(this);
 	}
 
 	/**
@@ -93,6 +101,34 @@ public class GridButton implements Serializable {
 		this.hit = true;
 		
 		return message;
+	}
+	
+	public String gotHit() {
+		
+		String message = "";
+		if (isShipPart())
+		{
+			message = ship.isDestroyed();
+			button.setBackground(Color.RED);
+		}
+		else 
+		{
+			button.setBackground(Color.YELLOW);
+			message = "Missed!";
+		}
+		
+		boolean oldValue = this.hit;
+		this.hit = true;
+		boolean newValue = this.hit;
+		
+		this.propertyChangeSupport.firePropertyChange(message, oldValue, newValue);
+		return message;
+		
+	}
+	
+	
+	public void attachObserver(PropertyChangeListener listener) {
+		this.propertyChangeSupport.addPropertyChangeListener(listener);;
 	}
 
 }

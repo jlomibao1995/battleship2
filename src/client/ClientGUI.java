@@ -7,6 +7,7 @@ import java.awt.GridLayout;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -20,7 +21,7 @@ import javax.swing.*;
 
 import problemdomain.*;
  
-public class ClientGUI implements PropertyChangeListener{
+public class ClientGUI implements PropertyChangeListener {
 	private JFrame frame;
 	
 	private JList chatList;
@@ -33,9 +34,13 @@ public class ClientGUI implements PropertyChangeListener{
 	private ObjectInputStream objectInputStream;
 	
 	private ArrayList<GridButton> playerGrid;
+	private ArrayList<GridButton> opponentGrid;
+	JPanel mainPanel;
 	
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+	
+	//private PropertyChangeSupport propertyChangeSupport;
 	
 	public ClientGUI() {
 		
@@ -91,13 +96,14 @@ public class ClientGUI implements PropertyChangeListener{
 				JButton button = new JButton();
 				button.setBackground(Color.LIGHT_GRAY);
 				GridButton gridButton = new GridButton(button, x, y);
+				gridButton.attachObserver(this);
 				
-				button.addActionListener((ActionEvent a) -> {
-					String message = gridButton.clicked();
-					
-					Message attackMessage = new Message(this.username, message);
-					sendMessage(attackMessage);
-				});
+//				button.addActionListener((ActionEvent a) -> {
+//					String message = gridButton.clicked();
+//					
+//					Message attackMessage = new Message(this.username, message);
+//					sendMessage(attackMessage);
+//				});
 				
 				playerGrid.add(gridButton);
 				
@@ -120,7 +126,7 @@ public class ClientGUI implements PropertyChangeListener{
 	private JPanel createOpponentPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
-		JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+		mainPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 		
@@ -136,22 +142,21 @@ public class ClientGUI implements PropertyChangeListener{
 		
 		JLabel title = new JLabel("Opponent's Grid", SwingConstants.CENTER);
 		
-		//mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 		
-		for (int i= 0; i<100; i++)
-		{
-			JButton button = new JButton();
-			//button.setPreferredSize(new Dimension(30, 40));
-			button.setBackground(Color.LIGHT_GRAY);
-			button.setOpaque(true);
-			
-			centerPanel.add(button);
-		}
+//		for (int i= 0; i<100; i++)
+//		{
+//			JButton button = new JButton();
+//			button.setBackground(Color.LIGHT_GRAY);
+//			button.setOpaque(true);
+//			
+//			centerPanel.add(button);
+//		}
 		
-		mainPanel.add(centerPanel, BorderLayout.CENTER);
+		//mainPanel.add(centerPanel, BorderLayout.CENTER);
 		mainPanel.add(title, BorderLayout.NORTH);
 		mainPanel.add(letterPanel, BorderLayout.WEST);
 		mainPanel.add(numberPanel, BorderLayout.SOUTH);
+		mainPanel.setVisible(false);
 		
 		return mainPanel;
 		}
@@ -222,6 +227,8 @@ public class ClientGUI implements PropertyChangeListener{
 			Message username = new Message(this.username, "Connected!");
 			objectOutputStream.writeObject(username);
 			
+			this.addMessage("Waiting for opponent...");
+			
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
@@ -230,8 +237,6 @@ public class ClientGUI implements PropertyChangeListener{
 			e1.printStackTrace();
 			this.addMessage("Unable to Connect.");
 		}
-		
-		makeShips();
 	}
 	
 	private void disconnectToNetwork() {
@@ -240,7 +245,6 @@ public class ClientGUI implements PropertyChangeListener{
 			objectInputStream.close();
 		} catch (IOException e) {
 
-			e.printStackTrace();
 		}
 	}
 	
@@ -259,10 +263,50 @@ public class ClientGUI implements PropertyChangeListener{
 		}
 	}
 	
+	public void sendPlayerGrid() {
+		try {
+			objectOutputStream.writeObject(playerGrid);
+			addMessage("Sending grid!");
+			System.out.println("Sent player grid.");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void addMessage(String message) {
 		
 		this.chatListModel.addElement(message);
 	} 
+	
+	public void addOpponentShips() {
+		try {
+			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
+			System.out.println("Received opponent grid!");
+			System.out.println(this.opponentGrid.get(0));
+
+			JPanel panel = new JPanel(new GridLayout(10,10));
+
+			for (GridButton grid : opponentGrid) {
+				grid.getButton().addActionListener((ActionEvent a) -> {
+					String message = grid.gotHit();
+
+					Message attackMessage = new Message(this.username, message);
+					sendMessage(attackMessage);
+				});
+				panel.add(grid.getButton());
+			}
+
+			mainPanel.add(panel, BorderLayout.CENTER);
+			mainPanel.setVisible(true);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	public void makeShips() {
 		boolean shipPlaced = false;
@@ -286,6 +330,8 @@ public class ClientGUI implements PropertyChangeListener{
 		while (!shipPlaced) {
 			shipPlaced = placeShips(2, "Destroyer");
 		}
+		
+		
 	}
 	
 	private boolean placeShips(int numberOfParts, String shipType) {
@@ -295,10 +341,10 @@ public class ClientGUI implements PropertyChangeListener{
 		int x_location = (int) (1 + Math.random() * 10);
 		int y_location = (int) (1 + Math.random() * 10);
 		
-		System.out.println("\n" + x_location + " " + y_location);
+		//System.out.println("\n" + x_location + " " + y_location);
 		
 		int num = (int) (1+ Math.random() *100);
-		System.out.println(num);
+		//System.out.println(num);
 		
 		if (num % 2 == 0) {
 			horizontal = false;
@@ -390,8 +436,12 @@ public class ClientGUI implements PropertyChangeListener{
 	}
 
 	@Override
-	public void propertyChange(PropertyChangeEvent arg0) {
-		
+	public void propertyChange(PropertyChangeEvent evt) {
+		System.out.println("Here!");
+		GridButton gridButton = (GridButton) evt.getSource();
+		int button = playerGrid.indexOf(gridButton);
+		playerGrid.get(button).clicked();
 		
 	}
+	
 }

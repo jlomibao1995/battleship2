@@ -1,16 +1,21 @@
 package problemdomain;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Ship {
+public class Ship implements Serializable {
 	
-	private int size;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2L;
+	private Integer size;
 	ArrayList<GridButton> shipParts;
 	String shipType;
 	
 	public Ship(int size, String shipType)
 	{
-		this.size = size;
+		this.size = new Integer(size);
 		this.shipType = shipType;
 		shipParts = new ArrayList<GridButton>();
 	}
