@@ -9,6 +9,8 @@ public class Message implements Serializable {
 	private String message;
 	private String username;
 	private Date date;
+	private Integer x;
+	private Integer y;
 	
 	public Message(String username, String message){
 		
@@ -45,6 +47,34 @@ public class Message implements Serializable {
 		return date;
 	}
 	
+	/**
+	 * @return the x
+	 */
+	public Integer getX() {
+		return x;
+	}
+
+	/**
+	 * @param x the x to set
+	 */
+	public void setX(Integer x) {
+		this.x = x;
+	}
+
+	/**
+	 * @return the y
+	 */
+	public Integer getY() {
+		return y;
+	}
+
+	/**
+	 * @param y the y to set
+	 */
+	public void setY(Integer y) {
+		this.y = y;
+	}
+
 	public String toString() {
 		
 		SimpleDateFormat dateFormatted = new SimpleDateFormat("h:mm a");

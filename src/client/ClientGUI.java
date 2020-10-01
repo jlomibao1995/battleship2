@@ -21,7 +21,7 @@ import javax.swing.*;
 
 import problemdomain.*;
  
-public class ClientGUI implements PropertyChangeListener {
+public class ClientGUI {
 	private JFrame frame;
 	
 	private JList chatList;
@@ -96,19 +96,8 @@ public class ClientGUI implements PropertyChangeListener {
 				JButton button = new JButton();
 				button.setBackground(Color.LIGHT_GRAY);
 				GridButton gridButton = new GridButton(button, x, y);
-				gridButton.attachObserver(this);
-				
-//				button.addActionListener((ActionEvent a) -> {
-//					String message = gridButton.clicked();
-//					
-//					Message attackMessage = new Message(this.username, message);
-//					sendMessage(attackMessage);
-//				});
-				
 				playerGrid.add(gridButton);
-				
 				centerPanel.add(button);
-				
 			}
 		}
 		
@@ -142,17 +131,6 @@ public class ClientGUI implements PropertyChangeListener {
 		
 		JLabel title = new JLabel("Opponent's Grid", SwingConstants.CENTER);
 		
-		
-//		for (int i= 0; i<100; i++)
-//		{
-//			JButton button = new JButton();
-//			button.setBackground(Color.LIGHT_GRAY);
-//			button.setOpaque(true);
-//			
-//			centerPanel.add(button);
-//		}
-		
-		//mainPanel.add(centerPanel, BorderLayout.CENTER);
 		mainPanel.add(title, BorderLayout.NORTH);
 		mainPanel.add(letterPanel, BorderLayout.WEST);
 		mainPanel.add(numberPanel, BorderLayout.SOUTH);
@@ -283,16 +261,21 @@ public class ClientGUI implements PropertyChangeListener {
 		try {
 			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
 			System.out.println("Received opponent grid!");
-			System.out.println(this.opponentGrid.get(0));
 
 			JPanel panel = new JPanel(new GridLayout(10,10));
 
 			for (GridButton grid : opponentGrid) {
 				grid.getButton().addActionListener((ActionEvent a) -> {
-					String message = grid.gotHit();
-
-					Message attackMessage = new Message(this.username, message);
-					sendMessage(attackMessage);
+					if (!grid.isHit()) {
+						String message = grid.clicked();
+						Message attackMessage = new Message(this.username, message);
+						attackMessage.setX(grid.getX_location());
+						attackMessage.setY(grid.getY_location());	
+						sendMessage(attackMessage);	
+					}
+					else {
+						this.addMessage("This has already been hit! Try again.");
+					}
 				});
 				panel.add(grid.getButton());
 			}
@@ -434,14 +417,13 @@ public class ClientGUI implements PropertyChangeListener {
 		//this.frame.pack();
 		this.frame.setVisible(true);
 	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		System.out.println("Here!");
-		GridButton gridButton = (GridButton) evt.getSource();
-		int button = playerGrid.indexOf(gridButton);
-		playerGrid.get(button).clicked();
-		
+	
+	public void updatePlayerGrid(int x, int y) {
+		for (GridButton gridButton : playerGrid) {
+			if (gridButton.getX_location() == x && gridButton.getY_location() == y) {
+				gridButton.clicked();
+			}
+		}
 	}
 	
 }

@@ -35,6 +35,10 @@ public class ServerConnection implements Runnable {
 					client.addOpponentShips();
 				}
 				
+				if (receive.getX() != null && receive.getY() != null) {
+					client.updatePlayerGrid(receive.getX(), receive.getY());
+				}
+				
 			} 
 			catch (ClassNotFoundException e) {
 				e.printStackTrace();
