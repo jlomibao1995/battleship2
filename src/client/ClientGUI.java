@@ -20,7 +20,6 @@ import problemdomain.*;
  
 public class ClientGUI {
 	private JFrame frame;
-	JPanel mainPanel;
 	
 	private JList chatList;
 	private DefaultListModel chatListModel;
@@ -39,7 +38,6 @@ public class ClientGUI {
 	public ClientGUI() {
 		
 		playerGrid = new ArrayList<>();
-		mainPanel = new JPanel(new BorderLayout(10, 10));
 		
 		this.frame = new JFrame("Battleship");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -67,6 +65,7 @@ public class ClientGUI {
 	private JPanel createClientPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
+		JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 		
@@ -82,29 +81,19 @@ public class ClientGUI {
 		
 		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
 		
-//		for (int y= 1; y <= 10; y++)
-//		{
-//			
-//			for (int x = 1; x <= 10; x++)
-//			{
-//				JButton button = new JButton();
-//				button.setBackground(Color.LIGHT_GRAY);
-//				
-//				playerGrid.add(new GridButton(button, x, y));
-//				
-//				centerPanel.add(button);
-//				
-//			}
-//		}
-		
-		for (int i= 0; i<100; i++)
+		for (int y= 1; y <= 10; y++)
 		{
-			JButton button = new JButton();
-			//button.setPreferredSize(new Dimension(30, 40));
-			button.setBackground(Color.LIGHT_GRAY);
-			button.setOpaque(true);
 			
-			centerPanel.add(button);
+			for (int x = 1; x <= 10; x++)
+			{
+				JButton button = new JButton();
+				button.setBackground(Color.LIGHT_GRAY);
+				
+				playerGrid.add(new GridButton(button, x, y));
+				
+				centerPanel.add(button);
+				
+			}
 		}
 		
 		mainPanel.add(centerPanel, BorderLayout.CENTER);
@@ -220,6 +209,28 @@ public class ClientGUI {
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
+			
+			boolean shipPlaced = false;
+
+			while (!shipPlaced) {
+				shipPlaced = placeShips(5, "Aircraft Carrier");
+			}
+			shipPlaced = false;
+			while (!shipPlaced) {
+				shipPlaced = placeShips(4, "Battleship");
+			}
+			shipPlaced = false;
+			while (!shipPlaced) {
+				shipPlaced = placeShips(3, "Cruiser");
+			}
+			shipPlaced = false;
+			while (!shipPlaced) {
+				shipPlaced = placeShips(3, "Submarine");
+			}
+			shipPlaced = false;
+			while (!shipPlaced) {
+				shipPlaced = placeShips(2, "Destroyer");
+			}
 		} 
 		catch (IOException e1) {
 			e1.printStackTrace();
@@ -273,18 +284,100 @@ public class ClientGUI {
 		this.chatListModel.addElement(message);
 	}
 	
-	public void addGridPanel(ArrayList<GridButton> playerGrid) {
+	private boolean placeShips(int numberOfParts, String shipType) {
+		ArrayList<GridButton> shipParts = new ArrayList<>();
+		boolean horizontal = true;
 		
-		this.playerGrid = playerGrid;
+		int x_location = (int) (1 + Math.random() * 10);
+		int y_location = (int) (1 + Math.random() * 10);
 		
-		JPanel panel = new JPanel(new GridLayout(10, 10));
+		System.out.println("\n" + x_location + " " + y_location);
 		
-		for (int i = 1; i <= 100; i++)
-		{
-			panel.add(playerGrid.get(i).getButton());
+		int num = (int) (1+ Math.random() *100);
+		System.out.println(num);
+		
+		if (num % 2 == 0) {
+			horizontal = false;
 		}
+		
+		int shipStart = 0;
+		
+		for (GridButton grid : playerGrid) {
+			if (grid.getX_location() == x_location && grid.getY_location() == y_location)
+			{
+				shipStart = playerGrid.indexOf(grid);
+			}
+		}
+		
+		if (horizontal) {
+			int xShip = shipStart;
+			if (numberOfParts > x_location)
+			{
+				for (int i = 0; i < numberOfParts; i++)
+				{
+					 
+					xShip = shipStart + i;
+					GridButton currentButton = playerGrid.get(xShip);
+					if (!currentButton.isShipPart()) {
+						shipParts.add(currentButton);
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			else {
+				
+				for (int i = 0; i < numberOfParts; i++)
+				{
+					xShip = shipStart - i;
+					GridButton currentButton = playerGrid.get(xShip);
+					if (!currentButton.isShipPart()) {
+						shipParts.add(currentButton);
+					}
+					else {
+						return false;
+					}
+				}
+			}
+		}
+		else {
+			int yShip = shipStart;
+			if (numberOfParts > y_location)
+			{
+				for (int i = 0; i < numberOfParts; i++) {
+					yShip = shipStart + i*10;
+					GridButton currentButton = playerGrid.get(yShip);
+					if (!currentButton.isShipPart()) {
+						shipParts.add(currentButton);
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < numberOfParts; i++) {
+					yShip = shipStart - i*10;
+					GridButton currentButton = playerGrid.get(yShip);
+					if (!currentButton.isShipPart()) {
+						shipParts.add(currentButton);
+					}
+					else {
+						return false;
+					}
+				}
+			}
+		}
+		
+		Ship ship = new Ship(numberOfParts, shipType);
 
-
+		for (GridButton part: shipParts) {
+			ship.addShipPart(part);
+			part.makeShipPart(ship);
+		}
+		
+		return true;
 	}
 	
 	public void display() {

@@ -2,8 +2,9 @@ package problemdomain;
 
 import javax.swing.JButton;
 import java.awt.*;
+import java.io.Serializable;
 
-public class GridButton {
+public class GridButton implements Serializable {
 	
 	private JButton button;
 	private int x_location;
