@@ -4,10 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -15,82 +12,95 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Random;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
-import problemdomain.*;
- 
+import problemdomain.GridButton;
+import problemdomain.Message;
+import problemdomain.Ship;
+
 public class ClientGUI {
 	private JFrame frame;
-	
+
 	private JList chatList;
 	private DefaultListModel chatListModel;
 	JTextField inputMessage;
-	
+
 	private String username;
 	Socket socket;
 	private ObjectOutputStream objectOutputStream;
 	private ObjectInputStream objectInputStream;
-	
+
+	private ArrayList<Ship> ships;
+	private ArrayList<Ship> opponentShips;
 	private ArrayList<GridButton> playerGrid;
 	private ArrayList<GridButton> opponentGrid;
-	JPanel mainPanel;
-	
+	JPanel opponentGridPanel;
+
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-	
-	//private PropertyChangeSupport propertyChangeSupport;
-	
+
 	public ClientGUI() {
-		
+
 		playerGrid = new ArrayList<>();
-		
+		ships = new ArrayList<>();
+		opponentShips = new ArrayList<>();
+
 		this.frame = new JFrame("Battleship");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.frame.setSize(600, 800);
 		this.frame.setLayout(new BorderLayout());
-		
+
 		JPanel gamePanel = new JPanel(new GridLayout(2, 1));
 		gamePanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10 ,40));
-		
+
 		JPanel clientPanel = createClientPanel();
-		JPanel opponentPanel = createOpponentPanel();
+		createOpponentPanel();
 		JPanel chatPanel = createChatPanel();
-		
+
 		gamePanel.add(clientPanel);
-		gamePanel.add(opponentPanel);
-		
+		gamePanel.add(this.opponentGridPanel);
+
 		this.frame.add(gamePanel, BorderLayout.CENTER);
 		this.frame.add(chatPanel, BorderLayout.SOUTH);
-		
+
 		display();
-		
+
 		username = JOptionPane.showInputDialog(this.frame, "Enter username: ");
 	}
-	
+
 	private JPanel createClientPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
 		JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
-		
+
 		for (int i = 0; i < 10; i++) {
 			JLabel letter = new JLabel(letters[i], SwingConstants.CENTER);
 			letterPanel.add(letter);
 		}
-		
+
 		for (int i=0; i < 10; i++) {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
-		
+
 		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
-		
+
 		for (int y= 1; y <= 10; y++)
 		{
-			
+
 			for (int x = 1; x <= 10; x++)
 			{
 				JButton button = new JButton();
@@ -100,113 +110,111 @@ public class ClientGUI {
 				centerPanel.add(button);
 			}
 		}
-		
+
 		mainPanel.add(centerPanel, BorderLayout.CENTER);
 		mainPanel.add(title, BorderLayout.NORTH);
 		mainPanel.add(letterPanel, BorderLayout.WEST);
 		mainPanel.add(numberPanel, BorderLayout.SOUTH);
-		
+
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 30, 0));
-		
+
 		return mainPanel;
-		
+
 	}
-	
-	private JPanel createOpponentPanel()
+
+	private void createOpponentPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
-		mainPanel = new JPanel(new BorderLayout(10, 10));
+		this.opponentGridPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
-		
+
 		for (int i = 0; i < 10; i++) {
 			JLabel letter = new JLabel(letters[i], SwingConstants.CENTER);
 			letterPanel.add(letter);
 		}
-		
+
 		for (int i=0; i < 10; i++) {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
-		
+
 		JLabel title = new JLabel("Opponent's Grid", SwingConstants.CENTER);
-		
-		mainPanel.add(title, BorderLayout.NORTH);
-		mainPanel.add(letterPanel, BorderLayout.WEST);
-		mainPanel.add(numberPanel, BorderLayout.SOUTH);
-		mainPanel.setVisible(false);
-		
-		return mainPanel;
-		}
-	
+
+		this.opponentGridPanel.add(title, BorderLayout.NORTH);
+		this.opponentGridPanel.add(letterPanel, BorderLayout.WEST);
+		this.opponentGridPanel.add(numberPanel, BorderLayout.SOUTH);
+		this.opponentGridPanel.setVisible(false);
+	}
+
 	private JPanel createChatPanel()
 	{
 		JPanel panel = new JPanel(new BorderLayout());
 		JPanel typePanel = new JPanel(new BorderLayout());
 		JButton sendButton = new JButton("Send");
-		
+
 		JPanel networkButtonPanel = new JPanel(new GridLayout(1,2));
 		JButton connectButton = new JButton("Connect");
 		JButton disconnectButton = new JButton("Disconnect");
-		
+
 		connectButton.addActionListener((ActionEvent a) -> {
 			connectToNetwork();
 		});
-		
+
 		disconnectButton.addActionListener((ActionEvent e) -> {
 			disconnectToNetwork();
 		});
-		
+
 		chatListModel = new DefaultListModel();
 		chatList = new JList(chatListModel);
 		JScrollPane scrollPane = new JScrollPane(chatList);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		
+
 		inputMessage = new JTextField();
 		Font font = new Font("SansSerif", Font.PLAIN, 15);
 		inputMessage.setFont(font);
-		
+
 		sendButton.addActionListener((ActionEvent a) -> {
-			
+
 			String text = inputMessage.getText();
-			
+
 			Message send = new Message(username, text);
-			
+
 			sendMessage(send);
 		});
-		
+
 		networkButtonPanel.add(connectButton);
 		networkButtonPanel.add(disconnectButton);
-		
+
 		typePanel.add(inputMessage, BorderLayout.CENTER);
 		typePanel.add(sendButton, BorderLayout.EAST);
 		typePanel.add(networkButtonPanel, BorderLayout.SOUTH);
-		
+
 		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.add(typePanel, BorderLayout.SOUTH);
 
 		return panel;
 	}
-	
+
 	private void connectToNetwork() {
-	
+
 		try {
 			socket = new Socket("localhost", 1234);
-			
+
 			this.addMessage("Connected!");
-			
+
 			OutputStream outputStream = socket.getOutputStream();
 			objectOutputStream = new ObjectOutputStream(outputStream);
-			
+
 			InputStream inputStream = socket.getInputStream();
 			objectInputStream = new ObjectInputStream(inputStream);
-			
+
 			Message username = new Message(this.username, "Connected!");
 			objectOutputStream.writeObject(username);
-			
+
 			this.addMessage("Waiting for opponent...");
-			
+
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
@@ -216,22 +224,23 @@ public class ClientGUI {
 			this.addMessage("Unable to Connect.");
 		}
 	}
-	
+
 	private void disconnectToNetwork() {
 		try {
 			objectOutputStream.close();
 			objectInputStream.close();
+			socket.close();
 		} catch (IOException e) {
 
 		}
 	}
-	
+
 	public void sendMessage(Message message) {
 		try {
 			objectOutputStream.writeObject(message);
-			
+
 			inputMessage.setText("");
-			
+
 			addMessage(message.toString());
 		}
 		catch (IOException e1) 
@@ -240,27 +249,66 @@ public class ClientGUI {
 			addMessage("Unable to send message.");
 		}
 	}
-	
+
 	public void sendPlayerGrid() {
 		try {
 			objectOutputStream.writeObject(playerGrid);
-			addMessage("Sending grid!");
-			System.out.println("Sent player grid.");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
+	public void sendShips() {
+		try {
+			objectOutputStream.writeObject(ships);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void addMessage(String message) {
-		
+
 		this.chatListModel.addElement(message);
 	} 
-	
-	public void addOpponentShips() {
+
+	private boolean checkShips() {
+		int counter = 0;
+
+		for (Ship ship : opponentShips) {
+			if (ship.isDestroyed()) {
+				counter++;
+			}
+		}
+
+		if (counter == ships.size()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public void endOfGame() {
+		Message message = new Message(this.username, "");
+
+		int answer = JOptionPane.showConfirmDialog(this.frame, "Would you like to play again?");
+
+		if (answer == JOptionPane.NO_OPTION ) {
+			this.disconnectToNetwork();
+		}
+		
+		try {
+			this.objectOutputStream.writeObject(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void addOpponentGrid() {
 		try {
 			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
-			System.out.println("Received opponent grid!");
 
 			JPanel panel = new JPanel(new GridLayout(10,10));
 
@@ -270,8 +318,22 @@ public class ClientGUI {
 						String message = grid.clicked();
 						Message attackMessage = new Message(this.username, message);
 						attackMessage.setX(grid.getX_location());
-						attackMessage.setY(grid.getY_location());	
-						sendMessage(attackMessage);	
+						attackMessage.setY(grid.getY_location());
+						attackMessage.setTurn(true);
+
+						if (checkShips()) {
+							Message gameEnd = new Message(this.username, "End of game!");
+							gameEnd.setWin(true);
+							endOfGame();
+							try {
+								objectOutputStream.writeObject(gameEnd);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						sendMessage(attackMessage);
+						this.endTurn();
 					}
 					else {
 						this.addMessage("This has already been hit! Try again.");
@@ -280,8 +342,9 @@ public class ClientGUI {
 				panel.add(grid.getButton());
 			}
 
-			mainPanel.add(panel, BorderLayout.CENTER);
-			mainPanel.setVisible(true);
+			this.opponentGridPanel.add(panel, BorderLayout.CENTER);
+			this.opponentGridPanel.setVisible(true);
+			this.endTurn();
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -291,6 +354,18 @@ public class ClientGUI {
 		}
 	}
 	
+	public void addOpponentShips() {
+		try {
+			this.opponentShips = (ArrayList<Ship>) objectInputStream.readObject();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public void makeShips() {
 		boolean shipPlaced = false;
 
@@ -313,42 +388,42 @@ public class ClientGUI {
 		while (!shipPlaced) {
 			shipPlaced = placeShips(2, "Destroyer");
 		}
-		
-		
+
+
 	}
-	
+
 	private boolean placeShips(int numberOfParts, String shipType) {
 		ArrayList<GridButton> shipParts = new ArrayList<>();
 		boolean horizontal = true;
-		
+
 		int x_location = (int) (1 + Math.random() * 10);
 		int y_location = (int) (1 + Math.random() * 10);
-		
+
 		//System.out.println("\n" + x_location + " " + y_location);
-		
+
 		int num = (int) (1+ Math.random() *100);
 		//System.out.println(num);
-		
+
 		if (num % 2 == 0) {
 			horizontal = false;
 		}
-		
+
 		int shipStart = 0;
-		
+
 		for (GridButton grid : playerGrid) {
 			if (grid.getX_location() == x_location && grid.getY_location() == y_location)
 			{
 				shipStart = playerGrid.indexOf(grid);
 			}
 		}
-		
+
 		if (horizontal) {
 			int xShip = shipStart;
 			if (numberOfParts > x_location)
 			{
 				for (int i = 0; i < numberOfParts; i++)
 				{
-					 
+
 					xShip = shipStart + i;
 					GridButton currentButton = playerGrid.get(xShip);
 					if (!currentButton.isShipPart()) {
@@ -360,7 +435,7 @@ public class ClientGUI {
 				}
 			}
 			else {
-				
+
 				for (int i = 0; i < numberOfParts; i++)
 				{
 					xShip = shipStart - i;
@@ -402,22 +477,36 @@ public class ClientGUI {
 				}
 			}
 		}
-		
-		Ship ship = new Ship(numberOfParts, shipType);
+
+		Ship ship = new Ship(shipType);
 
 		for (GridButton part: shipParts) {
 			ship.addShipPart(part);
 			part.makeShipPart(ship);
 		}
-		
+
+		ships.add(ship);
+
 		return true;
 	}
-	
+
 	public void display() {
 		//this.frame.pack();
 		this.frame.setVisible(true);
 	}
-	
+
+	public synchronized void playTurn() {
+		for (GridButton gridButton : opponentGrid) {
+			gridButton.getButton().setEnabled(true);
+		}
+	}
+
+	public synchronized void endTurn() {
+		for (GridButton gridButton : opponentGrid) {
+			gridButton.getButton().setEnabled(false);
+		}
+	}
+
 	public void updatePlayerGrid(int x, int y) {
 		for (GridButton gridButton : playerGrid) {
 			if (gridButton.getX_location() == x && gridButton.getY_location() == y) {
@@ -425,5 +514,5 @@ public class ClientGUI {
 			}
 		}
 	}
-	
+
 }

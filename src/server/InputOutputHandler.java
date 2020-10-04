@@ -11,9 +11,9 @@ public class InputOutputHandler implements Runnable {
 	private ClientConnection input;
 	private ClientConnection output;
 	private ServerGUI serverGUI;
-	
-	
-	
+
+
+
 	public InputOutputHandler(ClientConnection input, ClientConnection output, ServerGUI serverGUI) {
 		this.input = input;
 		this.output = output;
@@ -24,21 +24,36 @@ public class InputOutputHandler implements Runnable {
 
 	@Override
 	public void run() {
-		
+
 		while (!this.input.getSocket().isClosed() && !this.output.getSocket().isClosed()) {
 			try {
 
 				Message message = (Message) this.input.getOis().readObject();
 
-				this.output.getOos().writeObject(message);
-				serverGUI.addMessage(this.input.getUsername() + " sent a message.");
+					this.output.getOos().writeObject(message);
+					serverGUI.addMessage(this.input.getUsername() + " sent a message.");
+
+					if (message.getTurn()) {
+						Message turnMessage = new Message("Server", "Your turn!");
+						this.output.getOos().writeObject(turnMessage);
+					}
+					else {
+						Message turnMessage = new Message("Server", "Opponent's turn.");
+						this.output.getOos().writeObject(turnMessage);
+					}
+
+					if (message.getWin() && message.getWin() != null) {
+						Message lostMessage = new Message("Server", this.input.getUsername() + " won the game!");
+						serverGUI.addMessage(this.input.getUsername() + " won the game!");
+						this.output.getOos().writeObject(lostMessage);
+					}
 
 			}
 			catch (IOException e) {
 
 			}
 			catch (ClassNotFoundException e) {
-				
+
 			}
 		}
 

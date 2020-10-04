@@ -2,12 +2,10 @@ package problemdomain;
 
 import javax.swing.JButton;
 import java.awt.*;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 
 public class GridButton implements Serializable{
-	
+
 	/**
 	 * 
 	 */
@@ -70,34 +68,37 @@ public class GridButton implements Serializable{
 		this.shipPart = true;
 		button.setBackground(Color.BLUE);
 	}
-	
+
 	public boolean isShipPart()
 	{
 		return this.shipPart;
 	}
-	
+
 	public boolean isHit()
 	{
 		return hit;
 	}
-	
+
 	public String clicked()
 	{
-		String message = "";
+		this.hit = true;
 		if (isShipPart())
 		{
-			message = ship.isDestroyed();
-			button.setBackground(Color.RED);
+			ship.updateShip();
+			if (ship.isDestroyed()) {
+				return String.format("%s %s", ship.shipType, "has been sunk!");
+			}
+			else {
+				button.setBackground(Color.RED);
+				return "A ship has been hit";
+			}
 		}
 		else 
 		{
 			button.setBackground(Color.YELLOW);
-			message = "Missed!";
+			return "Missed!";
 		}
-		
-		this.hit = true;
-		
-		return message;
+
 	}
 
 }

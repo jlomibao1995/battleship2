@@ -18,16 +18,19 @@ public class Server{
 	//private ArrayList<ClientConnection> connections;
 	private ServerGUI serverGUI;
 	private final int PORT = 1234;
+	private ArrayList<GameConnection> currentGames;
+	ArrayList<ClientConnection> connections;
 
 	public Server(ServerGUI server) {
 
 		//this.connections = new ArrayList<>();
 		this.serverGUI = server;
+		this.currentGames = new ArrayList<>();
 	}
 
 	public void connectToNetwork() throws IOException {
 		
-		ArrayList<ClientConnection> connections = new ArrayList<>() ;
+		connections = new ArrayList<>() ;
 
 		ServerSocket listener = new ServerSocket(this.PORT);
 		this.serverGUI.addMessage("Listening on port: " + PORT);
@@ -35,8 +38,6 @@ public class Server{
 		while (listener.isBound()) {
 			try {
 				Socket client = listener.accept();
-
-				//server.addMessage("Client connected.");
 
 				InputStream inputStream = client.getInputStream();
 				ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
@@ -56,7 +57,8 @@ public class Server{
 					ClientConnection connection1 = connections.get(0);
 					ClientConnection connection2 = connections.get(1);
 					
-					GameConnection game = new GameConnection(this.serverGUI, connection1, connection2);
+					GameConnection game = new GameConnection(this, this.serverGUI, connection1, connection2);
+					currentGames.add(game);
 					Thread thread = new Thread(game);
 					
 					thread.start();
@@ -75,6 +77,20 @@ public class Server{
 		}
 		
 		listener.close();
+	}
+
+	/**
+	 * @return the connections
+	 */
+	public ClientConnection getConnection() {
+		
+		ClientConnection connection = null;
+		if (connections.size() != 0) {
+			connection = connections.get(0);
+			connections.remove(0);
+		}
+		
+		return connection;
 	}
 
 }

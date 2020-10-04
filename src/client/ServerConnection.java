@@ -2,9 +2,6 @@ package client;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-
-import problemdomain.GridButton;
 import problemdomain.Message;
 
 public class ServerConnection implements Runnable {
@@ -29,14 +26,28 @@ public class ServerConnection implements Runnable {
 				Message receive = (Message) ois.readObject();
 				client.addMessage(receive.toString());
 				
-				if (receive.getMessage().equals("Begin game")) {
+				if (receive.getMessage().equals("Begin game") && receive.getUsername().equals("Server")) {
 					client.makeShips();
 					client.sendPlayerGrid();
+					client.sendShips();
+					client.addOpponentGrid();
 					client.addOpponentShips();
 				}
 				
 				if (receive.getX() != null && receive.getY() != null) {
 					client.updatePlayerGrid(receive.getX(), receive.getY());
+//					Message turnMessage = new Message("Server", "Your turn.");
+//					client.addMessage(turnMessage.toString());
+					client.playTurn();
+				}
+				
+				if (receive.getTurn() != null && receive.getUsername().equals("Server") && receive.getTurn()) {
+					client.playTurn();
+				}
+				
+				if (receive.getWin()) {
+					client.endTurn();
+					client.endOfGame();
 				}
 				
 			} 

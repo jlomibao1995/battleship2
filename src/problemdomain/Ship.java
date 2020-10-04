@@ -1,5 +1,6 @@
 package problemdomain;
 
+import java.awt.Color;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -9,24 +10,24 @@ public class Ship implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 2L;
-	private Integer size;
 	ArrayList<GridButton> shipParts;
 	String shipType;
+	Boolean destroyed;
 	
-	public Ship(int size, String shipType)
+	public Ship(String shipType)
 	{
-		this.size = new Integer(size);
 		this.shipType = shipType;
-		shipParts = new ArrayList<GridButton>();
+		this.shipParts = new ArrayList<GridButton>();
+		this.destroyed = false;
 	}
-	
+
 	public void addShipPart(GridButton shipPart) {
 		shipParts.add(shipPart);
 	}
 	
-	public String isDestroyed()
+	public void updateShip()
 	{
-		int counter = 1;
+		int counter = 0;
 		for (GridButton shipPart : shipParts)
 		{
 			if (shipPart.isHit())
@@ -36,12 +37,17 @@ public class Ship implements Serializable {
 			System.out.println(counter);
 		}
 		
-		if (counter == size)
+		if (counter == shipParts.size())
 		{
-			return String.format("%s %s", shipType, "has been sunk!");
+			for (GridButton part: shipParts) {
+				part.getButton().setBackground(Color.BLACK);
+			}
+			this.destroyed = true;
 		}
-		else 
-			return "A ship has been hit";
+	}
+	
+	public boolean isDestroyed() {
+		return destroyed;
 	}
 
 }
