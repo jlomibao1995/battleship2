@@ -46,6 +46,7 @@ public class ClientGUI {
 	private ArrayList<GridButton> playerGrid;
 	private ArrayList<GridButton> opponentGrid;
 	JPanel opponentGridPanel;
+	JPanel playerPanel;
 
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
@@ -64,11 +65,11 @@ public class ClientGUI {
 		JPanel gamePanel = new JPanel(new GridLayout(2, 1));
 		gamePanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10 ,40));
 
-		JPanel clientPanel = createClientPanel();
+		createClientPanel();
 		createOpponentPanel();
 		JPanel chatPanel = createChatPanel();
 
-		gamePanel.add(clientPanel);
+		gamePanel.add(this.playerPanel);
 		gamePanel.add(this.opponentGridPanel);
 
 		this.frame.add(gamePanel, BorderLayout.CENTER);
@@ -79,10 +80,10 @@ public class ClientGUI {
 		username = JOptionPane.showInputDialog(this.frame, "Enter username: ");
 	}
 
-	private JPanel createClientPanel()
+	private void createClientPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
-		JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+		this.playerPanel = new JPanel(new BorderLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 
@@ -95,9 +96,7 @@ public class ClientGUI {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
-
-		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
-
+		
 		for (int y= 1; y <= 10; y++)
 		{
 
@@ -110,22 +109,23 @@ public class ClientGUI {
 				centerPanel.add(button);
 			}
 		}
+		
 
-		mainPanel.add(centerPanel, BorderLayout.CENTER);
-		mainPanel.add(title, BorderLayout.NORTH);
-		mainPanel.add(letterPanel, BorderLayout.WEST);
-		mainPanel.add(numberPanel, BorderLayout.SOUTH);
+		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
 
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 30, 0));
+		this.playerPanel.add(title, BorderLayout.NORTH);
+		this.playerPanel.add(letterPanel, BorderLayout.WEST);
+		this.playerPanel.add(numberPanel, BorderLayout.SOUTH);
+		this.playerPanel.add(centerPanel, BorderLayout.CENTER);
 
-		return mainPanel;
+		this.playerPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 30, 0));
 
 	}
 
 	private void createOpponentPanel()
 	{
-		JPanel centerPanel = new JPanel(new GridLayout(10,10));
 		this.opponentGridPanel = new JPanel(new BorderLayout(10, 10));
+		JPanel centerPanel = new JPanel(new GridLayout(10,10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 
@@ -138,13 +138,24 @@ public class ClientGUI {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
+		
+		for (int y= 1; y <= 10; y++)
+		{
+
+			for (int x = 1; x <= 10; x++)
+			{
+				JButton button = new JButton();
+				button.setBackground(Color.LIGHT_GRAY);
+				centerPanel.add(button);
+			}
+		}
 
 		JLabel title = new JLabel("Opponent's Grid", SwingConstants.CENTER);
 
 		this.opponentGridPanel.add(title, BorderLayout.NORTH);
 		this.opponentGridPanel.add(letterPanel, BorderLayout.WEST);
 		this.opponentGridPanel.add(numberPanel, BorderLayout.SOUTH);
-		this.opponentGridPanel.setVisible(false);
+		this.opponentGridPanel.add(centerPanel, BorderLayout.CENTER);
 	}
 
 	private JPanel createChatPanel()
@@ -310,7 +321,10 @@ public class ClientGUI {
 		try {
 			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
 
-			JPanel panel = new JPanel(new GridLayout(10,10));
+			JPanel panel = new JPanel(new GridLayout(10, 10));
+			
+			BorderLayout layout = (BorderLayout)this.opponentGridPanel.getLayout();
+			this.opponentGridPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
 
 			for (GridButton grid : opponentGrid) {
 				grid.getButton().addActionListener((ActionEvent a) -> {
@@ -343,7 +357,6 @@ public class ClientGUI {
 			}
 
 			this.opponentGridPanel.add(panel, BorderLayout.CENTER);
-			this.opponentGridPanel.setVisible(true);
 			this.endTurn();
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -367,6 +380,25 @@ public class ClientGUI {
 	}
 
 	public void makeShips() {
+		JPanel panel = new JPanel(new GridLayout(10, 10));
+		playerGrid.clear();
+		BorderLayout layout = (BorderLayout)this.playerPanel.getLayout();
+		this.playerPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
+		
+		for (int y= 1; y <= 10; y++)
+		{
+
+			for (int x = 1; x <= 10; x++)
+			{
+				JButton button = new JButton();
+				button.setBackground(Color.LIGHT_GRAY);
+				GridButton gridButton = new GridButton(button, x, y);
+				playerGrid.add(gridButton);
+				panel.add(button);
+			}
+		}
+		
+		
 		boolean shipPlaced = false;
 
 		while (!shipPlaced) {
@@ -388,7 +420,8 @@ public class ClientGUI {
 		while (!shipPlaced) {
 			shipPlaced = placeShips(2, "Destroyer");
 		}
-
+		
+		this.playerPanel.add(panel, BorderLayout.CENTER);
 
 	}
 
