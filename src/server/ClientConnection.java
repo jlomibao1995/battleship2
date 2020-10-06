@@ -4,14 +4,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+/**
+ * Class containing the socket and streams for each client.
+ * @author Jean
+ *@version October 6, 2020
+ */
 public class ClientConnection {
 	
-	private Socket socket;
-	private ObjectInputStream ois;
-	private ObjectOutputStream oos;
-	private String username;
+	private Socket socket; 
+	private ObjectInputStream ois; 
+	private ObjectOutputStream oos; 
+	private String username; 
 	
-	
+	/**
+	 * User defined constructor for the class.
+	 * @param socket client socket
+	 * @param ois ObjectInputStream 
+	 * @param oos ObjectOutputStream
+	 * @param username client username
+	 */
 	public ClientConnection(Socket socket, ObjectInputStream ois, ObjectOutputStream oos, String username) {
 		this.socket = socket;
 		this.ois = ois;
@@ -27,14 +38,14 @@ public class ClientConnection {
 	}
 
 	/**
-	 * @return the ois
+	 * @return the ObjectInputStream 
 	 */
 	public ObjectInputStream getOis() {
 		return ois;
 	}
 
 	/**
-	 * @return the oos
+	 * @return the ObjectOutputStream
 	 */
 	public ObjectOutputStream getOos() {
 		return oos;

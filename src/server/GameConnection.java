@@ -7,6 +7,12 @@ import problemdomain.GridButton;
 import problemdomain.Message;
 import problemdomain.Ship;
 
+/**
+ * Contains the streams and sockets for the clients that are connected.
+ * @author Jean
+ * @version October 6, 2020
+ *
+ */
 public class GameConnection implements Runnable {
 	
 	private ClientConnection connection1;
@@ -16,6 +22,13 @@ public class GameConnection implements Runnable {
 	private Thread thread1;
 	private Thread thread2;
 	
+	/**
+	 * User-defined constructor for the class.
+	 * @param server server class containing connection to each client
+	 * @param serverGUI the server GUI
+	 * @param connection1 client socket and streams
+	 * @param connection2 client socket and streams
+	 */
 	public GameConnection(Server server, ServerGUI serverGUI, ClientConnection connection1, ClientConnection connection2) {
 
 		this.server = server;
@@ -25,9 +38,13 @@ public class GameConnection implements Runnable {
 	}
 
 	@Override
+	/**
+	 * Starts the game and starts a thread for sending messages from the client to client
+	 */
 	public void run() {	
 		
-		while (!connection1.getSocket().isClosed() || !connection2.getSocket().isClosed()) {
+		//will run as long as the sockets are connected
+		while (!connection1.getSocket().isClosed() && !connection2.getSocket().isClosed()) {
 			
 			Message message = new Message("Server", "Begin game");
 			serverGUI.addMessage("Game Started!");
@@ -44,6 +61,7 @@ public class GameConnection implements Runnable {
 			this.sendShips();
 			this.determineTurn();
 			
+			//start threads that will handle sending messages to each client
 			InputOutputHandler  ioHandler1 = new InputOutputHandler(this.connection2, this.connection1, this.serverGUI);
 			this.thread1 = new Thread(ioHandler1);
 			thread1.start();
@@ -58,9 +76,11 @@ public class GameConnection implements Runnable {
 			} 
 			catch (InterruptedException e) {
 
+				serverGUI.addMessage("Game ended between " + connection1.getUsername() + " and " + connection2.getUsername());
 				e.printStackTrace();
 			}
 			
+			//when game ends and the other cient is still connected find the next client and connect them
 			ClientConnection newConnection = null;
 			Message newGame = new Message("Server", "Waiting for connection...");
 			
@@ -92,6 +112,9 @@ public class GameConnection implements Runnable {
 		
 	}
 	
+	/**
+	 * Sends client grid to the other client.
+	 */
 	private void sendGrids() {
 		try {
 			ArrayList<GridButton> playerGrid1 = (ArrayList<GridButton>)  this.connection1.getOis().readObject();
@@ -102,14 +125,17 @@ public class GameConnection implements Runnable {
 			
 			serverGUI.addMessage("Sent player grids.");
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
+			serverGUI.addMessage("Unable to send grids.");
 			e1.printStackTrace();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+			serverGUI.addMessage("Unable to send grids.");
 			e1.printStackTrace();
 		}
 	}
 	
+	/**
+	 * Sends client ships to the other client.
+	 */
 	private void sendShips() {
 		try {
 			ArrayList<Ship> ships1 = (ArrayList<Ship>) this.connection1.getOis().readObject();
@@ -118,14 +144,17 @@ public class GameConnection implements Runnable {
 			ArrayList<Ship> ships2 = (ArrayList<Ship>) this.connection2.getOis().readObject();
 			this.connection1.getOos().writeObject(ships2);
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
+			serverGUI.addMessage("Unable to send ships.");
 			e1.printStackTrace();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+			serverGUI.addMessage("Unable to send grids.");
 			e1.printStackTrace();
 		}
 	}
 	
+	/**
+	 * Determines which player goes first.
+	 */
 	private void determineTurn() {
 		int turn = (int) Math.random();
 
@@ -144,6 +173,7 @@ public class GameConnection implements Runnable {
 			}
 		}
 		catch (IOException e) {
+			serverGUI.addMessage("Unable to determine player turn.");
 			e.printStackTrace();
 		}
 	}

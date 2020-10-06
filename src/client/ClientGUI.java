@@ -18,49 +18,59 @@ import javax.swing.*;
 import problemdomain.GridButton;
 import problemdomain.Message;
 import problemdomain.Ship;
-
+/**
+ * Displays the client window with the battleship grids and chat panel.
+ * @author Jean
+ *
+ */
 public class ClientGUI {
-	private JFrame frame;
+	private JFrame frame; //parent window
 
-	private JList chatList;
-	private DefaultListModel chatListModel;
-	JTextField inputMessage;
+	private JList chatList; //contains the list of messages sent
+	private DefaultListModel chatListModel; //wraps the chatList
+	JTextField inputMessage; //field for entering message the client wants to send
 
-	private String username;
-	Socket socket;
-	private ObjectOutputStream objectOutputStream;
-	private ObjectInputStream objectInputStream;
+	private String username; //client username
+	Socket socket; //client socket
+	private ObjectOutputStream objectOutputStream; //sends the object through the socket to the server
+	private ObjectInputStream objectInputStream; //receives messages from the server 
 
-	private ArrayList<Ship> ships;
-	private ArrayList<Ship> opponentShips;
-	private ArrayList<GridButton> playerGrid;
-	private ArrayList<GridButton> opponentGrid;
+	private ArrayList<Ship> ships; //list of ships the client has
+	private ArrayList<Ship> opponentShips; //list of ships the opponent has
+	
+	private ArrayList<GridButton> playerGrid; //contains buttons of the client's board
+	private ArrayList<GridButton> opponentGrid; //contains buttons of the opponent's board
 	JPanel opponentGridPanel;
 	JPanel playerPanel;
-	
-	int counter = 0;
-	boolean playAgain;
 
+	//grid axis labels 
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 
+	/**
+	 * Constructor for the client GUI
+	 */
 	public ClientGUI() {
 
+		//initialize ArrayLists
 		playerGrid = new ArrayList<>();
 		this.opponentGrid = new ArrayList<>();
 		ships = new ArrayList<>();
 		opponentShips = new ArrayList<>();
 
+		//construct the main window
 		this.frame = new JFrame("Battleship");
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.frame.setSize(600, 800);
 		this.frame.setLayout(new BorderLayout());
 
+		//construct panel to contain grids
 		JPanel gamePanel = new JPanel(new GridLayout(2, 1));
 		gamePanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10 ,40));
-
 		createClientPanel();
 		createOpponentPanel();
+		
+		//construct chat panel
 		JPanel chatPanel = createChatPanel();
 
 		gamePanel.add(this.playerPanel);
@@ -69,11 +79,16 @@ public class ClientGUI {
 		this.frame.add(gamePanel, BorderLayout.CENTER);
 		this.frame.add(chatPanel, BorderLayout.SOUTH);
 
+		//window is displayed once the panels have been created
 		display();
 
+		//ask user for their name
 		username = JOptionPane.showInputDialog(this.frame, "Enter username: ");
 	}
 
+	/**
+	 * Creates the client's panel which contains the grid for their ship
+	 */
 	private void createClientPanel()
 	{
 		JPanel centerPanel = new JPanel(new GridLayout(10,10));
@@ -81,25 +96,27 @@ public class ClientGUI {
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 
+		//create labels for y axis
 		for (int i = 0; i < 10; i++) {
 			JLabel letter = new JLabel(letters[i], SwingConstants.CENTER);
 			letterPanel.add(letter);
 		}
 
+		//create label for x axis
 		for (int i=0; i < 10; i++) {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
 
+		//create the buttons and store coordinates in GridButton class
 		for (int y= 1; y <= 10; y++)
 		{
 
 			for (int x = 1; x <= 10; x++)
 			{
 				JButton button = new JButton();
-				button.setBackground(Color.LIGHT_GRAY);
 				GridButton gridButton = new GridButton(button, x, y);
-				playerGrid.add(gridButton);
+				playerGrid.add(gridButton); //add button to arraylist for player's buttons
 				centerPanel.add(button);
 			}
 		}
@@ -116,6 +133,10 @@ public class ClientGUI {
 
 	}
 
+	/**
+	 * Creates the opponents panel with grids for their ships. Buttons on this
+	 * panel will respond when the client clicks on it,
+	 */
 	private void createOpponentPanel()
 	{
 		this.opponentGridPanel = new JPanel(new BorderLayout(10, 10));
@@ -123,6 +144,7 @@ public class ClientGUI {
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 
+		//label grid axis
 		for (int i = 0; i < 10; i++) {
 			JLabel letter = new JLabel(letters[i], SwingConstants.CENTER);
 			letterPanel.add(letter);
@@ -133,13 +155,13 @@ public class ClientGUI {
 			numberPanel.add(number);
 		}
 
+		//add buttons and their coordinates 
 		for (int y= 1; y <= 10; y++)
 		{
 
 			for (int x = 1; x <= 10; x++)
 			{
 				JButton button = new JButton();
-				//button.setBackground(Color.LIGHT_GRAY);
 				GridButton gridButton = new GridButton(button, x, y);
 				this.opponentGrid.add(gridButton);
 				centerPanel.add(button);
@@ -154,6 +176,11 @@ public class ClientGUI {
 		this.opponentGridPanel.add(centerPanel, BorderLayout.CENTER);
 	}
 
+	/**
+	 * Creates the chat panel with connect, disconnect, and send buttons
+	 * and the window displaying messages being sent.
+	 * @return panel panel which contains the chat window
+	 */
 	private JPanel createChatPanel()
 	{
 		JPanel panel = new JPanel(new BorderLayout());
@@ -164,14 +191,17 @@ public class ClientGUI {
 		JButton connectButton = new JButton("Connect");
 		JButton disconnectButton = new JButton("Disconnect");
 
+		//add listener when the connect button is clicked
 		connectButton.addActionListener((ActionEvent a) -> {
 			connectToNetwork();
 		});
 
+		//add listener when the disconnect button is clicked 
 		disconnectButton.addActionListener((ActionEvent e) -> {
 			disconnectToNetwork();
 		});
 
+		//makes list that can be displayed on the panel and adds a scrollbar when needed
 		chatListModel = new DefaultListModel();
 		chatList = new JList(chatListModel);
 		JScrollPane scrollPane = new JScrollPane(chatList);
@@ -182,6 +212,7 @@ public class ClientGUI {
 		Font font = new Font("SansSerif", Font.PLAIN, 15);
 		inputMessage.setFont(font);
 
+		//adds a listener to the send button for sending messages
 		sendButton.addActionListener((ActionEvent a) -> {
 
 			String text = inputMessage.getText();
@@ -204,10 +235,17 @@ public class ClientGUI {
 		return panel;
 	}
 
+	/**
+	 * Connects the client to the server
+	 */
 	private void connectToNetwork() {
+		//ask user for input
+		String host = JOptionPane.showInputDialog(this.frame, "Enter host ip:");
+		int port = Integer.parseInt(JOptionPane.showInputDialog(this.frame, "Enter port number: "));
 
 		try {
-			socket = new Socket("localhost", 1234);
+			//make a new socket and obtain input and output streams
+			socket = new Socket(host, port);
 
 			this.addMessage("Connected!");
 
@@ -222,12 +260,12 @@ public class ClientGUI {
 
 			this.addMessage("Waiting for opponent...");
 
+			//start a thread for receiving messages from the server
 			ServerConnection serverConnection = new ServerConnection(this, objectInputStream, socket);
 			Thread thread = new Thread(serverConnection);
 			thread.start();
 		} 
 		catch (IOException e1) {
-			e1.printStackTrace();
 			this.addMessage("Unable to Connect.");
 		}
 	}
@@ -238,10 +276,14 @@ public class ClientGUI {
 			objectInputStream.close();
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			this.addMessage("Disconnected to server.");
 		}
 	}
 
+	/**
+	 * Send message object to the server
+	 * @param message message object to be sent to the server
+	 */
 	public void sendMessage(Message message) {
 		try {
 			objectOutputStream.writeObject(message);
@@ -252,43 +294,57 @@ public class ClientGUI {
 		}
 		catch (IOException e1) 
 		{
-			e1.printStackTrace();
-			addMessage("Unable to send message.");
+			this.addMessage("Unable to send message.");
 		}
 	}
 
+	/**
+	 * Sends the player's grid with the ship coordinates to the server
+	 */
 	public void sendPlayerGrid() {
 		try {
 			objectOutputStream.writeObject(playerGrid);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			this.addMessage("Unable to send grid coordinates.");
 		}
 	}
 
+	/**
+	 * Sends the list of client's ships to the server.
+	 */
 	public void sendShips() {
 		try {
 			objectOutputStream.writeObject(ships);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			this.addMessage("Unable to send ships.");
 		}
 	}
 
+	/**
+	 * Adds and displays any messages sent or received. 
+	 * @param message message from the message object
+	 */
 	public void addMessage(String message) {
 
 		this.chatListModel.addElement(message);
 	} 
 
+	/**
+	 * Checks if all of the opponent's ships have been destroyed
+	 * @return true if the all ships are destroyed 
+	 */
 	private boolean checkShips() {
 		int counter = 0;
 
+		//go through all the ships the opponent has and check if they are destroyed
 		for (Ship ship : opponentShips) {
 			if (ship.isDestroyed()) {
 				counter++;
 			}
 		}
-
+		
+		//will return true when the number of ships destroyed is equal to the size of the list 
 		if (counter == ships.size()) {
 			return true;
 		}
@@ -296,55 +352,63 @@ public class ClientGUI {
 		return false;
 	}
 
+	/**
+	 * Executes when a player has won and prompts the user if they want to play again
+	 */
 	public void endOfGame() {
 		Message message = new Message(this.username, "");
 
+		//prompt user if they want to play again
 		int answer = JOptionPane.showConfirmDialog(this.frame, "Would you like to play again?");
 
 		try {
+			//disconnect from the user if user doesn't want to play again
 			if (answer == JOptionPane.NO_OPTION ) {
+				message.setMessage("Left the game.");
 				this.objectOutputStream.writeObject(message);
 				this.disconnectToNetwork();
-				System.exit(0);
 			}
 			else {
 				message.setPlayAgain(true);
+				message.setMessage("I want to play again.");
 				this.objectOutputStream.writeObject(message);
 			}
 		}
 		catch (IOException  e) {
+			this.addMessage("Unable to send message.");
 			e.printStackTrace();
 		}
 	}
-	
+	/**
+	 * Receives the opponents grid coordinates and adds them to the window.
+	 * Listeners are added to buttons so that color changes when user clicks on them.
+	 */
 	public void addOpponentGrid() {
 		try {
-			ArrayList<GridButton> newGrid = (ArrayList<GridButton>) objectInputStream.readObject();
-			for (int i = 0; i < newGrid.size(); i++) {
-				this.opponentGrid.set(i, newGrid.get(i));
-			}
-			
+			//get the ArrayList from the server
+			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
 			JPanel panel = new JPanel(new GridLayout(10,10));
-			this.opponentGridPanel.setVisible(false);
 			
+			//remove the previous grid 
 			BorderLayout layout = (BorderLayout)this.opponentGridPanel.getLayout();
 			this.opponentGridPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
 			
-			System.out.println();
-			System.out.println();
-			System.out.println();
-			
+			//go through the new grid buttons and add listeners
 			for (GridButton gridButton : this.opponentGrid) {
-				if (gridButton.isShipPart()) {
-					System.out.println(gridButton.getX_location() + " " + gridButton.getY_location());
-				}
+				//set all the buttons to blue so that client can't tell where ships are
+				gridButton.getButton().setBackground(Color.BLUE);
 				gridButton.getButton().addActionListener((ActionEvent a) -> {
+					//if the buttons hasn't been clicked before change status to clicked
+					//let user know if the button has already been clicked
 					if (!gridButton.isHit()) {
 						String message = gridButton.clicked();
 						Message attackMessage = new Message(this.username, message);
+						//store the coordinates in the message
 						attackMessage.setX(gridButton.getX_location());
 						attackMessage.setY(gridButton.getY_location());
 
+						//check if all the ships are destroyed
+						//end game if all ships are destroyed
 						if (checkShips()) {
 							sendMessage(attackMessage);
 							Message gameEnd = new Message(this.username, "I sunk all your ships!");
@@ -366,86 +430,37 @@ public class ClientGUI {
 				this.opponentGridPanel.add(panel,BorderLayout.CENTER);
 				this.opponentGridPanel.revalidate();
 				this.opponentGridPanel.repaint();
-				this.opponentGridPanel.setVisible(true);
 			}
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			this.addMessage("Did not receive opponent grid.");
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			this.addMessage("Unable to send message");
+			this.addMessage("Did not receive opponent grid.");
 			e.printStackTrace();
 		}
 	}
 
-//	public void addOpponentGrid() {
-//		counter++;
-//		System.out.println(counter);
-//		try {
-//			ArrayList<GridButton> newGrid = (ArrayList<GridButton>) objectInputStream.readObject();
-//
-//			for (int i = 0; i < this.opponentGrid.size(); i++) {
-//				GridButton grid = this.opponentGrid.get(i);
-//				GridButton newGridButton = newGrid.get(i);
-//				JButton button = grid.getButton();
-//
-//				grid.resetGridButton();
-//				if (newGridButton.isShipPart()) {
-//					grid.makeShipPart(newGridButton.getShip());
-//					newGridButton.getShip().removeShipPart(newGridButton);
-//				}
-//				
-//				if (counter == 1) {
-//					button.addActionListener((ActionEvent a) -> {
-//						if (!grid.isHit()) {
-//							String message = grid.clicked();
-//							Message attackMessage = new Message(this.username, message);
-//							attackMessage.setX(grid.getX_location());
-//							attackMessage.setY(grid.getY_location());
-//
-//							if (checkShips()) {
-//								sendMessage(attackMessage);
-//								Message gameEnd = new Message(this.username, "I sunk all your ships!");
-//								gameEnd.setWin(true);
-//								this.sendMessage(gameEnd);
-//								endOfGame();
-//							}
-//							else {
-//								attackMessage.setTurn(true);
-//								sendMessage(attackMessage);
-//								this.endTurn();	
-//							}
-//						}
-//						else {
-//							this.addMessage("This has already been hit! Try again.");
-//						}
-//					});
-//				}
-//				
-//			}
-//			this.endTurn();
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
-
+	/**
+	 * Receives list of where the opponent ships are and stores them.
+	 */
 	public void addOpponentShips() {
 		try {
 			this.opponentShips = (ArrayList<Ship>) objectInputStream.readObject();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			this.addMessage("Did not receive opponent ships.");
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			this.addMessage("Did not receive opponent ships.");
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Places all the ships needed for a standard battleship game on the grid.
+	 */
 	public void makeShips() {
-		//this.playerPanel.setVisible(false);
+		//make another list of buttons for the grid 
 		JPanel panel = new JPanel(new GridLayout(10, 10));
 		playerGrid.clear();
 		BorderLayout layout = (BorderLayout)this.playerPanel.getLayout();
@@ -457,7 +472,6 @@ public class ClientGUI {
 			for (int x = 1; x <= 10; x++)
 			{
 				JButton button = new JButton();
-				button.setBackground(Color.LIGHT_GRAY);
 				GridButton gridButton = new GridButton(button, x, y);
 				playerGrid.add(gridButton);
 				panel.add(button);
@@ -465,6 +479,7 @@ public class ClientGUI {
 		}
 
 
+		//place each ship on the grid
 		boolean shipPlaced = false;
 
 		while (!shipPlaced) {
@@ -494,24 +509,29 @@ public class ClientGUI {
 
 	}
 
+	/**
+	 * Places each ship on the grid randomly
+	 * @param numberOfParts number of squares the ship occupies
+	 * @param shipType type of ship being placed
+	 * @return true if the ships is successfully made
+	 */
 	private boolean placeShips(int numberOfParts, String shipType) {
 		ArrayList<GridButton> shipParts = new ArrayList<>();
 		boolean horizontal = true;
 
+		//get a number between 1 and 10 for the a and y coordinates
 		int x_location = (int) (1 + Math.random() * 10);
 		int y_location = (int) (1 + Math.random() * 10);
 
-		//System.out.println("\n" + x_location + " " + y_location);
-
+		//obtain a number to determine if the ship will be placed horizontally or vertically
 		int num = (int) (1+ Math.random() *100);
-		//System.out.println(num);
-
 		if (num % 2 == 0) {
 			horizontal = false;
 		}
 
 		int shipStart = 0;
 
+		//get the GridButton with the coordinates obtained
 		for (GridButton grid : playerGrid) {
 			if (grid.getX_location() == x_location && grid.getY_location() == y_location)
 			{
@@ -519,6 +539,9 @@ public class ClientGUI {
 			}
 		}
 
+		//will determine if the ship can be placed on the grid depending if its occupied
+		//if occupied the method returns false and the ship is not placed
+		//ship is not fully placed until all parts have been placed in an unoccupied coordinate
 		if (horizontal) {
 			int xShip = shipStart;
 			if (numberOfParts > x_location)
@@ -580,6 +603,7 @@ public class ClientGUI {
 			}
 		}
 
+		//create a ship object with the coordinates obtained
 		Ship ship = new Ship(shipType);
 
 		for (GridButton part: shipParts) {
@@ -587,28 +611,42 @@ public class ClientGUI {
 			part.makeShipPart(ship);
 		}
 
-		ships.add(ship);
+		ships.add(ship); //add ship to list of player ships
 
 		return true;
 	}
 
+	/**
+	 * Displays whole window with all the panels.
+	 */
 	public void display() {
 		//this.frame.pack();
 		this.frame.setVisible(true);
 	}
 
-	public synchronized void playTurn() {
+	/**
+	 * Activates buttons when it is the client's turn to attack.
+	 */
+	public void playTurn() {
 		for (GridButton gridButton : opponentGrid) {
 			gridButton.getButton().setEnabled(true);
 		}
 	}
 
-	public synchronized void endTurn() {
+	/**
+	 * Deactivates buttons when it is the opponent's turn to attack.
+	 */
+	public void endTurn() {
 		for (GridButton gridButton : opponentGrid) {
 			gridButton.getButton().setEnabled(false);
 		}
 	}
 
+	/**
+	 * Updates the player's grid in response to the opponent's attacks.
+	 * @param x
+	 * @param y
+	 */
 	public void updatePlayerGrid(int x, int y) {
 		for (GridButton gridButton : playerGrid) {
 			if (gridButton.getX_location() == x && gridButton.getY_location() == y) {
