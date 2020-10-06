@@ -21,6 +21,7 @@ public class GridButton implements Serializable{
 		this.button = button;
 		this.x_location = new Integer(x_location);
 		this.y_location = new Integer(y_location);
+		button.setBackground(Color.LIGHT_GRAY);
 	}
 
 	/**
@@ -37,7 +38,12 @@ public class GridButton implements Serializable{
 		return x_location;
 	}
 
-
+	/**
+	 * @return the ship
+	 */
+	public Ship getShip() {
+		return ship;
+	}
 
 	/**
 	 * @param x_location the x_location to set
@@ -72,6 +78,13 @@ public class GridButton implements Serializable{
 	public boolean isShipPart()
 	{
 		return this.shipPart;
+	}
+	
+	public void resetGridButton() {
+		this.hit = false;
+		this.ship = null;
+		this.shipPart = false;
+		this.button.setBackground(Color.LIGHT_GRAY);
 	}
 
 	public boolean isHit()

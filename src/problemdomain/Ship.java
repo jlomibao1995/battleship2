@@ -25,6 +25,10 @@ public class Ship implements Serializable {
 		shipParts.add(shipPart);
 	}
 	
+	public void removeShipPart(GridButton gridButton) {
+		shipParts.remove(gridButton);
+	}
+	
 	public void updateShip()
 	{
 		int counter = 0;
@@ -34,7 +38,6 @@ public class Ship implements Serializable {
 			{
 				counter++;
 			}
-			System.out.println(counter);
 		}
 		
 		if (counter == shipParts.size())

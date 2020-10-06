@@ -24,11 +24,13 @@ public class InputOutputHandler implements Runnable {
 
 	@Override
 	public void run() {
+		
+		Message message = new Message("Server", "Start over.");
 
-		while (!this.input.getSocket().isClosed() && !this.output.getSocket().isClosed()) {
+		while (!this.input.getSocket().isClosed() && !this.output.getSocket().isClosed() && !message.getPlayAgain()) {
 			try {
 
-				Message message = (Message) this.input.getOis().readObject();
+				message = (Message) this.input.getOis().readObject();
 
 					this.output.getOos().writeObject(message);
 					serverGUI.addMessage(this.input.getUsername() + " sent a message.");
@@ -50,9 +52,10 @@ public class InputOutputHandler implements Runnable {
 
 			}
 			catch (IOException e) {
-
+				e.printStackTrace();
 			}
 			catch (ClassNotFoundException e) {
+				e.printStackTrace();
 
 			}
 		}

@@ -13,17 +13,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 import problemdomain.GridButton;
 import problemdomain.Message;
@@ -47,6 +37,9 @@ public class ClientGUI {
 	private ArrayList<GridButton> opponentGrid;
 	JPanel opponentGridPanel;
 	JPanel playerPanel;
+	
+	int counter = 0;
+	boolean playAgain;
 
 	private static String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 	private static String[] numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
@@ -54,6 +47,7 @@ public class ClientGUI {
 	public ClientGUI() {
 
 		playerGrid = new ArrayList<>();
+		this.opponentGrid = new ArrayList<>();
 		ships = new ArrayList<>();
 		opponentShips = new ArrayList<>();
 
@@ -96,7 +90,7 @@ public class ClientGUI {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
-		
+
 		for (int y= 1; y <= 10; y++)
 		{
 
@@ -109,7 +103,7 @@ public class ClientGUI {
 				centerPanel.add(button);
 			}
 		}
-		
+
 
 		JLabel title = new JLabel("Your Grid", SwingConstants.CENTER);
 
@@ -125,7 +119,7 @@ public class ClientGUI {
 	private void createOpponentPanel()
 	{
 		this.opponentGridPanel = new JPanel(new BorderLayout(10, 10));
-		JPanel centerPanel = new JPanel(new GridLayout(10,10));
+		JPanel centerPanel = new JPanel(new GridLayout(10, 10));
 		JPanel letterPanel = new JPanel(new GridLayout(10, 1));
 		JPanel numberPanel = new JPanel(new GridLayout(1, 10));
 
@@ -138,14 +132,16 @@ public class ClientGUI {
 			JLabel number = new JLabel(numbers[i], SwingConstants.CENTER);
 			numberPanel.add(number);
 		}
-		
+
 		for (int y= 1; y <= 10; y++)
 		{
 
 			for (int x = 1; x <= 10; x++)
 			{
 				JButton button = new JButton();
-				button.setBackground(Color.LIGHT_GRAY);
+				//button.setBackground(Color.LIGHT_GRAY);
+				GridButton gridButton = new GridButton(button, x, y);
+				this.opponentGrid.add(gridButton);
 				centerPanel.add(button);
 			}
 		}
@@ -242,7 +238,7 @@ public class ClientGUI {
 			objectInputStream.close();
 			socket.close();
 		} catch (IOException e) {
-
+			e.printStackTrace();
 		}
 	}
 
@@ -269,7 +265,7 @@ public class ClientGUI {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void sendShips() {
 		try {
 			objectOutputStream.writeObject(ships);
@@ -305,59 +301,60 @@ public class ClientGUI {
 
 		int answer = JOptionPane.showConfirmDialog(this.frame, "Would you like to play again?");
 
-		if (answer == JOptionPane.NO_OPTION ) {
-			this.disconnectToNetwork();
-		}
-		
 		try {
-			this.objectOutputStream.writeObject(message);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			if (answer == JOptionPane.NO_OPTION ) {
+				this.objectOutputStream.writeObject(message);
+				this.disconnectToNetwork();
+			}
+			else {
+				message.setPlayAgain(true);
+				this.objectOutputStream.writeObject(message);
+			}
+		}
+		catch (IOException  e) {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public void addOpponentGrid() {
 		try {
 			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
-
-			JPanel panel = new JPanel(new GridLayout(10, 10));
+			JPanel panel = new JPanel(new GridLayout(10,10));
+			//this.opponentGridPanel.setVisible(false);
 			
 			BorderLayout layout = (BorderLayout)this.opponentGridPanel.getLayout();
 			this.opponentGridPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
-
-			for (GridButton grid : opponentGrid) {
-				grid.getButton().addActionListener((ActionEvent a) -> {
-					if (!grid.isHit()) {
-						String message = grid.clicked();
+			
+			for (GridButton gridButton : this.opponentGrid) {
+				gridButton.getButton().addActionListener((ActionEvent a) -> {
+					if (!gridButton.isHit()) {
+						String message = gridButton.clicked();
 						Message attackMessage = new Message(this.username, message);
-						attackMessage.setX(grid.getX_location());
-						attackMessage.setY(grid.getY_location());
-						attackMessage.setTurn(true);
+						attackMessage.setX(gridButton.getX_location());
+						attackMessage.setY(gridButton.getY_location());
 
 						if (checkShips()) {
-							Message gameEnd = new Message(this.username, "End of game!");
+							sendMessage(attackMessage);
+							Message gameEnd = new Message(this.username, "I sunk all your ships!");
 							gameEnd.setWin(true);
+							this.sendMessage(gameEnd);
 							endOfGame();
-							try {
-								objectOutputStream.writeObject(gameEnd);
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
 						}
-						sendMessage(attackMessage);
-						this.endTurn();
+						else {
+							attackMessage.setTurn(true);
+							sendMessage(attackMessage);
+							this.endTurn();	
+						}
 					}
 					else {
 						this.addMessage("This has already been hit! Try again.");
 					}
 				});
-				panel.add(grid.getButton());
+				panel.add(gridButton.getButton());
+				this.opponentGridPanel.add(panel,BorderLayout.CENTER);
+				this.opponentGridPanel.revalidate();
+				this.opponentGridPanel.repaint();
 			}
-
-			this.opponentGridPanel.add(panel, BorderLayout.CENTER);
-			this.endTurn();
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -366,7 +363,62 @@ public class ClientGUI {
 			e.printStackTrace();
 		}
 	}
-	
+
+//	public void addOpponentGrid() {
+//		counter++;
+//		System.out.println(counter);
+//		try {
+//			ArrayList<GridButton> newGrid = (ArrayList<GridButton>) objectInputStream.readObject();
+//
+//			for (int i = 0; i < this.opponentGrid.size(); i++) {
+//				GridButton grid = this.opponentGrid.get(i);
+//				GridButton newGridButton = newGrid.get(i);
+//				JButton button = grid.getButton();
+//
+//				grid.resetGridButton();
+//				if (newGridButton.isShipPart()) {
+//					grid.makeShipPart(newGridButton.getShip());
+//					newGridButton.getShip().removeShipPart(newGridButton);
+//				}
+//				
+//				if (counter == 1) {
+//					button.addActionListener((ActionEvent a) -> {
+//						if (!grid.isHit()) {
+//							String message = grid.clicked();
+//							Message attackMessage = new Message(this.username, message);
+//							attackMessage.setX(grid.getX_location());
+//							attackMessage.setY(grid.getY_location());
+//
+//							if (checkShips()) {
+//								sendMessage(attackMessage);
+//								Message gameEnd = new Message(this.username, "I sunk all your ships!");
+//								gameEnd.setWin(true);
+//								this.sendMessage(gameEnd);
+//								endOfGame();
+//							}
+//							else {
+//								attackMessage.setTurn(true);
+//								sendMessage(attackMessage);
+//								this.endTurn();	
+//							}
+//						}
+//						else {
+//							this.addMessage("This has already been hit! Try again.");
+//						}
+//					});
+//				}
+//				
+//			}
+//			this.endTurn();
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+
 	public void addOpponentShips() {
 		try {
 			this.opponentShips = (ArrayList<Ship>) objectInputStream.readObject();
@@ -380,11 +432,12 @@ public class ClientGUI {
 	}
 
 	public void makeShips() {
+		//this.playerPanel.setVisible(false);
 		JPanel panel = new JPanel(new GridLayout(10, 10));
 		playerGrid.clear();
 		BorderLayout layout = (BorderLayout)this.playerPanel.getLayout();
 		this.playerPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
-		
+
 		for (int y= 1; y <= 10; y++)
 		{
 
@@ -397,8 +450,8 @@ public class ClientGUI {
 				panel.add(button);
 			}
 		}
-		
-		
+
+
 		boolean shipPlaced = false;
 
 		while (!shipPlaced) {
@@ -420,8 +473,11 @@ public class ClientGUI {
 		while (!shipPlaced) {
 			shipPlaced = placeShips(2, "Destroyer");
 		}
-		
+
 		this.playerPanel.add(panel, BorderLayout.CENTER);
+		this.playerPanel.validate();
+		this.playerPanel.repaint();
+		//this.playerPanel.setVisible(true);
 
 	}
 

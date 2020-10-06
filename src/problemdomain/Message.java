@@ -17,7 +17,7 @@ public class Message implements Serializable {
 	private Integer y;
 	private Boolean turn;
 	private Boolean win;
-	private Boolean play;
+	private Boolean playAgain;
 	private Boolean sendGrid;
 	private Boolean sendShip;
 	public Message(String username, String message){
@@ -27,7 +27,7 @@ public class Message implements Serializable {
 		this.date = new Date();
 		this.turn = false;
 		this.win = false;
-		this.play = true;
+		this.playAgain = false;
 		this.sendGrid = false;
 		this.sendShip = false;
 	}
@@ -120,15 +120,15 @@ public class Message implements Serializable {
 	/**
 	 * @return the playAgain
 	 */
-	public Boolean getPlay() {
-		return play;
+	public Boolean getPlayAgain() {
+		return playAgain;
 	}
 
 	/**
 	 * @param playAgain the playAgain to set
 	 */
-	public void setPlay(Boolean playAgain) {
-		this.play = playAgain;
+	public void setPlayAgain(Boolean playAgain) {
+		this.playAgain = playAgain;
 	}
 
 	/**

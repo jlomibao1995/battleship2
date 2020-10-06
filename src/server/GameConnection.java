@@ -36,6 +36,7 @@ public class GameConnection implements Runnable {
 				this.connection1.getOos().writeObject(message);
 				this.connection2.getOos().writeObject(message);
 			} catch (IOException e1) {
+				e1.printStackTrace();
 
 			}
 			
@@ -61,16 +62,30 @@ public class GameConnection implements Runnable {
 			}
 			
 			ClientConnection newConnection = null;
+			Message newGame = new Message("Server", "Waiting for connection...");
 			
-			while (newConnection == null) {
-				newConnection = server.getConnection();
+			try {
+				if (connection1.getSocket().isClosed() && !connection2.getSocket().isClosed()) {
+					connection2.getOos().writeObject(newGame);
+					
+					while (newConnection == null) {
+						newConnection = server.getConnection();
+					}
+					
+					connection1 = newConnection;
+				}
+				else if (connection2.getSocket().isClosed() && !connection1.getSocket().isClosed()) {
+					connection1.getOos().writeObject(newGame);
+					while (newConnection == null) {
+						newConnection = server.getConnection();
+					}
+					
+					connection2 = newConnection;
+				}
+				
 			}
-			
-			if (connection1.getSocket().isClosed() && !connection2.getSocket().isClosed()) {
-				connection1 = newConnection;
-			}
-			else if (connection2.getSocket().isClosed() && !connection1.getSocket().isClosed()) {
-				connection2 = newConnection;
+			catch (IOException e) {
+				e.printStackTrace();
 			}
 			
 		}
@@ -129,7 +144,7 @@ public class GameConnection implements Runnable {
 			}
 		}
 		catch (IOException e) {
-
+			e.printStackTrace();
 		}
 	}
 	

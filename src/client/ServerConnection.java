@@ -36,8 +36,6 @@ public class ServerConnection implements Runnable {
 				
 				if (receive.getX() != null && receive.getY() != null) {
 					client.updatePlayerGrid(receive.getX(), receive.getY());
-//					Message turnMessage = new Message("Server", "Your turn.");
-//					client.addMessage(turnMessage.toString());
 					client.playTurn();
 				}
 				
