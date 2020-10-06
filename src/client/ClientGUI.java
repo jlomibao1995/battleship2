@@ -357,6 +357,7 @@ public class ClientGUI {
 	 */
 	public void endOfGame() {
 		Message message = new Message(this.username, "");
+		this.endTurn();
 
 		//prompt user if they want to play again
 		int answer = JOptionPane.showConfirmDialog(this.frame, "Would you like to play again?");
