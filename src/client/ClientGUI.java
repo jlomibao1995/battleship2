@@ -190,15 +190,19 @@ public class ClientGUI {
 		JPanel networkButtonPanel = new JPanel(new GridLayout(1,2));
 		JButton connectButton = new JButton("Connect");
 		JButton disconnectButton = new JButton("Disconnect");
+		disconnectButton.setEnabled(false);
 
 		//add listener when the connect button is clicked
 		connectButton.addActionListener((ActionEvent a) -> {
 			connectToNetwork();
+			connectButton.setEnabled(false);
+			disconnectButton.setEnabled(true);
 		});
 
 		//add listener when the disconnect button is clicked 
 		disconnectButton.addActionListener((ActionEvent e) -> {
 			disconnectToNetwork();
+			connectButton.setEnabled(true);
 		});
 
 		//makes list that can be displayed on the panel and adds a scrollbar when needed

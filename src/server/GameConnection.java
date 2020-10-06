@@ -44,7 +44,7 @@ public class GameConnection implements Runnable {
 	public void run() {	
 		
 		//will run as long as the sockets are connected
-		while (!connection1.getSocket().isClosed() && !connection2.getSocket().isClosed()) {
+		while (!connection1.getSocket().isClosed() || !connection2.getSocket().isClosed()) {
 			
 			Message message = new Message("Server", "Begin game");
 			serverGUI.addMessage("Game Started!");
@@ -73,10 +73,9 @@ public class GameConnection implements Runnable {
 			try {
 				thread1.join();
 				thread2.join();
+				serverGUI.addMessage("Game ended between " + connection1.getUsername() + " and " + connection2.getUsername());
 			} 
 			catch (InterruptedException e) {
-
-				serverGUI.addMessage("Game ended between " + connection1.getUsername() + " and " + connection2.getUsername());
 				e.printStackTrace();
 			}
 			

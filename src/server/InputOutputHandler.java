@@ -27,7 +27,7 @@ public class InputOutputHandler implements Runnable {
 		
 		Message message = new Message("Server", "Start over.");
 
-		while (!this.input.getSocket().isClosed() && !this.output.getSocket().isClosed() && !message.getPlayAgain()) {
+		while (!this.input.getSocket().isClosed() && !this.output.getSocket().isClosed()) {
 			try {
 
 				message = (Message) this.input.getOis().readObject();
@@ -48,6 +48,7 @@ public class InputOutputHandler implements Runnable {
 						Message lostMessage = new Message("Server", this.input.getUsername() + " won the game!");
 						serverGUI.addMessage(this.input.getUsername() + " won the game!");
 						this.output.getOos().writeObject(lostMessage);
+						break;
 					}
 
 			}
