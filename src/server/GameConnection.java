@@ -27,7 +27,7 @@ public class GameConnection implements Runnable {
 	@Override
 	public void run() {	
 		
-		while (!connection1.getSocket().isClosed() && !connection2.getSocket().isClosed()) {
+		while (!connection1.getSocket().isClosed() || !connection2.getSocket().isClosed()) {
 			
 			Message message = new Message("Server", "Begin game");
 			serverGUI.addMessage("Game Started!");
@@ -41,7 +41,7 @@ public class GameConnection implements Runnable {
 			}
 			
 			this.sendGrids();
-			this.sendGrids();
+			this.sendShips();
 			this.determineTurn();
 			
 			InputOutputHandler  ioHandler1 = new InputOutputHandler(this.connection2, this.connection1, this.serverGUI);

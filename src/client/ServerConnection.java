@@ -29,8 +29,8 @@ public class ServerConnection implements Runnable {
 				if (receive.getMessage().equals("Begin game") && receive.getUsername().equals("Server")) {
 					client.makeShips();
 					client.sendPlayerGrid();
-					client.sendShips();
 					client.addOpponentGrid();
+					client.sendShips();
 					client.addOpponentShips();
 				}
 				

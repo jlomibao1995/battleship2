@@ -305,6 +305,7 @@ public class ClientGUI {
 			if (answer == JOptionPane.NO_OPTION ) {
 				this.objectOutputStream.writeObject(message);
 				this.disconnectToNetwork();
+				System.exit(0);
 			}
 			else {
 				message.setPlayAgain(true);
@@ -318,14 +319,25 @@ public class ClientGUI {
 	
 	public void addOpponentGrid() {
 		try {
-			this.opponentGrid = (ArrayList<GridButton>) objectInputStream.readObject();
+			ArrayList<GridButton> newGrid = (ArrayList<GridButton>) objectInputStream.readObject();
+			for (int i = 0; i < newGrid.size(); i++) {
+				this.opponentGrid.set(i, newGrid.get(i));
+			}
+			
 			JPanel panel = new JPanel(new GridLayout(10,10));
-			//this.opponentGridPanel.setVisible(false);
+			this.opponentGridPanel.setVisible(false);
 			
 			BorderLayout layout = (BorderLayout)this.opponentGridPanel.getLayout();
 			this.opponentGridPanel.remove(layout.getLayoutComponent(BorderLayout.CENTER));
 			
+			System.out.println();
+			System.out.println();
+			System.out.println();
+			
 			for (GridButton gridButton : this.opponentGrid) {
+				if (gridButton.isShipPart()) {
+					System.out.println(gridButton.getX_location() + " " + gridButton.getY_location());
+				}
 				gridButton.getButton().addActionListener((ActionEvent a) -> {
 					if (!gridButton.isHit()) {
 						String message = gridButton.clicked();
@@ -354,6 +366,7 @@ public class ClientGUI {
 				this.opponentGridPanel.add(panel,BorderLayout.CENTER);
 				this.opponentGridPanel.revalidate();
 				this.opponentGridPanel.repaint();
+				this.opponentGridPanel.setVisible(true);
 			}
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
