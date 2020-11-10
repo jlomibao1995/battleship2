@@ -2,7 +2,12 @@ package client;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+
+import problemdomain.Attack;
+import problemdomain.GridButton;
 import problemdomain.Message;
+import problemdomain.PlayerGrid;
 
 /**
  * Class for the connection between the client and the server
@@ -37,34 +42,18 @@ public class ServerConnection implements Runnable {
 		while (!server.isClosed())
 		{
 			try {
-				Message receive = (Message) ois.readObject();
-				client.addMessage(receive.toString());
+				Object receive = ois.readObject();
 				
-				//when server signals to begin the game ships are placed and sent
-				if (receive.getMessage().equals("Begin game") && receive.getUsername().equals("Server")) {
-					client.makeShips();
-					client.sendPlayerGrid();
-					client.sendShips();
-					client.addOpponentGrid();
-					client.addOpponentShips();
+				if (receive instanceof Message) {
+					this.client.addMessage(((Message)receive).toString());
 				}
-				
-				//if there are coordinates in the message update the player's grid
-				if (receive.getX() != null && receive.getY() != null) {
-					client.updatePlayerGrid(receive.getX(), receive.getY());
-					client.playTurn();
+				else if (receive instanceof PlayerGrid) {
+					this.client.displayShips((PlayerGrid) receive);
 				}
-				
-				if (receive.getTurn() != null && receive.getUsername().equals("Server") && receive.getTurn()) {
-					client.playTurn();
+				else if (receive instanceof Attack) {
+					Attack attack = (Attack) receive;
+					this.client.updatetGrid(attack, attack.getUsername());	
 				}
-				
-				//when the message signals that someone has won end the game
-				if (receive.getWin()) {
-					client.endTurn();
-					client.endOfGame();
-				}
-				
 			} 
 			catch (ClassNotFoundException e) {
 				e.printStackTrace();

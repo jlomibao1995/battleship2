@@ -41,7 +41,8 @@ public class Server{
 		connections = new ArrayList<>() ;
 		
 		//prompt user for port number
-		int port = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter port number: "));
+		//int port = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter port number: "));
+		int port = 1234;
 
 		ServerSocket listener = new ServerSocket(port);
 		this.serverGUI.addMessage("Listening on port: " + port);

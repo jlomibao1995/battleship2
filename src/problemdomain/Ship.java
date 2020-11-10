@@ -38,35 +38,31 @@ public class Ship implements Serializable {
 	}
 	
 	/**
-	 * Updates the ship if it has been destroyed.
-	 */
-	public void updateShip()
-	{
-		//determine if all the parts have been hit
-		int counter = 0;
-		for (GridButton shipPart : shipParts)
-		{
-			if (shipPart.isHit())
-			{
-				counter++;
-			}
-		}
-		
-		if (counter == shipParts.size())
-		{
-			for (GridButton part: shipParts) {
-				part.getButton().setBackground(Color.BLACK);
-			}
-			this.destroyed = true;
-		}
-	}
-	
-	/**
 	 * 
 	 * @return destroyed true if all the ship parts have been hit and destroyed
 	 */
 	public boolean isDestroyed() {
 		return destroyed;
+	}
+
+	/**
+	 * @return the shipParts
+	 */
+	public ArrayList<GridButton> getShipParts() {
+		return shipParts;
+	}
+	
+	public void hit() {
+		int count = 0;
+		for (GridButton part: shipParts) {
+			if (part.isHit()) {
+				count++;
+			}
+		}
+		
+		if (count == shipParts.size()) {
+			this.destroyed = true;
+		}
 	}
 
 }
