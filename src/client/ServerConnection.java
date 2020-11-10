@@ -45,7 +45,11 @@ public class ServerConnection implements Runnable {
 				Object receive = ois.readObject();
 				
 				if (receive instanceof Message) {
-					this.client.addMessage(((Message)receive).toString());
+					Message message = (Message) receive;
+					this.client.addMessage(message.toString());
+					
+					if (message.getMessage().equals("Your turn"))
+						this.client.turn();
 				}
 				else if (receive instanceof PlayerGrid) {
 					this.client.displayShips((PlayerGrid) receive);

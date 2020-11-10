@@ -123,26 +123,34 @@ public class ClientGUI {
 				centerPanel.add(button);
 				GridButton gridButton = new GridButton(x, y);
 				gridButton.setButton(button);
-				
+
 				if (gridTitle.equals("Opponent Grid")) {
 					this.opponentGrid.add(gridButton);
 					gridButton.getButton().addActionListener((ActionEvent a) -> {
-						
-						Attack attack = new Attack(gridButton.getX_location(), gridButton.getY_location(), this.username);
-						
-						try {
-							objectOutputStream.writeObject(attack);
+
+						if (gridButton.isHit()) {
+							this.addMessage("This has been hit already!");
 						}
-						catch (IOException e1) 
+						else
 						{
-							this.addMessage("Unable to attack.");
+							Attack attack = new Attack(gridButton.getX_location(), gridButton.getY_location(), this.username);
+							this.endTurn();
+
+							try {
+								objectOutputStream.writeObject(attack);
+							}
+							catch (IOException e1) 
+							{
+								this.addMessage("Unable to attack.");
+							}
 						}
-						
+
 					});
 				} else {
-					button.setEnabled(false);
 					this.myGrid.add(gridButton);
 				}
+
+				button.setEnabled(false);
 			}
 		}
 
@@ -331,9 +339,11 @@ public class ClientGUI {
 			if (x == attack.getX() && y == attack.getY()) {
 				if (attack.isHit()) {
 					button.setBackground(Color.RED);
+					this.addMessage("A ship has been hit!");
 				}
 				else {
 					button.setBackground(Color.white);
+					this.addMessage(attack.getUsername() + " missed!");
 				}
 				break;
 			}
@@ -341,6 +351,7 @@ public class ClientGUI {
 
 		if (attack.getShips() != null) {
 			Ship ship = attack.getShips();
+			this.addMessage(ship.getShipType() + " has been sunked by " + attack.getUsername());
 
 			for (GridButton part: ship.getShipParts()) {
 				int xShip = part.getX_location();
@@ -361,6 +372,18 @@ public class ClientGUI {
 
 		if (attack.isGameOver()) {
 			this.gameOver();
+		}
+	}
+	
+	public void turn() {
+		for (GridButton gridButton: this.opponentGrid) {
+			gridButton.getButton().setEnabled(true);
+		}
+	}
+
+	private void endTurn() {
+		for (GridButton gridButton: this.opponentGrid) {
+			gridButton.getButton().setEnabled(false);
 		}
 	}
 	

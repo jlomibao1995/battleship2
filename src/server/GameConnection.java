@@ -52,12 +52,22 @@ public class GameConnection implements Runnable {
 			
 			Message message = new Message("Server", "Begin game");
 			serverGUI.addMessage("Game Started!");
+			Message turnMessage = new Message("Server", "Your turn");
+			
+			int rand = (int) Math.random();
 			
 			try {
 				this.connection1.getOos().writeObject(message);
 				this.connection1.getOos().writeObject(player1);
 				this.connection2.getOos().writeObject(message);
 				this.connection2.getOos().writeObject(player2);
+				
+				if (rand % 2 == 0) {
+					this.connection2.getOos().writeObject(turnMessage);
+				}
+				else {
+					this.connection1.getOos().writeObject(turnMessage);
+				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
 

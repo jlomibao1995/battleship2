@@ -65,4 +65,11 @@ public class Ship implements Serializable {
 		}
 	}
 
+	/**
+	 * @return the shipType
+	 */
+	public String getShipType() {
+		return shipType;
+	}
+
 }
