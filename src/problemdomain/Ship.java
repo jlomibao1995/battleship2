@@ -63,6 +63,7 @@ public class Ship implements Serializable {
 		if (count == shipParts.size()) {
 			this.destroyed = true;
 		}
+		
 	}
 
 	/**

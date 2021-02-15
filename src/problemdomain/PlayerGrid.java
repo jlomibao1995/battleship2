@@ -15,25 +15,39 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private ArrayList<GridButton> grid;
-	private String username;
-	private ArrayList<Ship> ships;
+	private ArrayList<GridButton> player1Grid;
+	private ArrayList<GridButton> player2Grid;
+	private String player1;
+	private String player2;
+	private ArrayList<Ship> player1Ships;
+	private ArrayList<Ship> player2Ships;
+	private int playAgain;
+	private boolean player1PlayAgain;
+	private boolean player2PlayAgain;
 	/**
 	 * @param username
 	 */
-	public PlayerGrid(String username) {
-		this.username = username;
+	public PlayerGrid(String player1, String player2) {
+		this.player1 = player1;
+		this.player2 = player2;
 		this.startNewGame();
 	}
 	
 	public void startNewGame() {
-		ships = new ArrayList<>();
-		grid = new ArrayList<>();
-		this.makeGrid();
-		this.makeShips();
+		player1Ships = new ArrayList<>();
+		player2Ships = new ArrayList<>();
+		player1Grid = new ArrayList<>();
+		player2Grid = new ArrayList<>();
+		this.makeGrid(player1Grid);
+		this.makeGrid(player2Grid);
+		this.makeShips(player1Ships, player1Grid);
+		this.makeShips(player2Ships, player2Grid);
+		this.playAgain = 0;
+		player1PlayAgain = false;
+		player2PlayAgain = false;
 	}
 	
-	private void makeGrid() {
+	private void makeGrid(ArrayList<GridButton> grid) {
 		for (int y= 1; y <= 10; y++)
 		{
 
@@ -49,29 +63,29 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 	/**
 	 * Places all the ships needed for a standard battleship game on the grid.
 	 */
-	private void makeShips() {
+	private void makeShips(ArrayList<Ship> ships, ArrayList<GridButton> grid) {
 
 		//place each ship on the grid
 		boolean shipPlaced = false;
 
 		while (!shipPlaced) {
-			shipPlaced = placeShips(5, "Aircraft Carrier");
+			shipPlaced = placeShips(5, "Aircraft Carrier", ships, grid);
 		}
 		shipPlaced = false;
 		while (!shipPlaced) {
-			shipPlaced = placeShips(4, "Battleship");
+			shipPlaced = placeShips(4, "Battleship", ships, grid);
 		}
 		shipPlaced = false;
 		while (!shipPlaced) {
-			shipPlaced = placeShips(3, "Cruiser");
+			shipPlaced = placeShips(3, "Cruiser", ships, grid);
 		}
 		shipPlaced = false;
 		while (!shipPlaced) {
-			shipPlaced = placeShips(3, "Submarine");
+			shipPlaced = placeShips(3, "Submarine", ships, grid);
 		}
 		shipPlaced = false;
 		while (!shipPlaced) {
-			shipPlaced = placeShips(2, "Destroyer");
+			shipPlaced = placeShips(2, "Destroyer", ships, grid);
 		}
 
 	}
@@ -82,7 +96,7 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 	 * @param shipType type of ship being placed
 	 * @return true if the ships is successfully made
 	 */
-	private boolean placeShips(int numberOfParts, String shipType) {
+	private boolean placeShips(int numberOfParts, String shipType, ArrayList<Ship> ships, ArrayList<GridButton> playerGrid) {
 		ArrayList<GridButton> shipParts = new ArrayList<>();
 		boolean horizontal = true;
 
@@ -99,10 +113,10 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 		int shipStart = 0;
 
 		//get the GridButton with the coordinates obtained
-		for (GridButton grid : this.grid) {
+		for (GridButton grid : playerGrid) {
 			if (grid.getX_location() == x_location && grid.getY_location() == y_location)
 			{
-				shipStart = this.grid.indexOf(grid);
+				shipStart = playerGrid.indexOf(grid);
 			}
 		}
 
@@ -117,7 +131,7 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 				{
 
 					xShip = shipStart + i;
-					GridButton currentButton = this.grid.get(xShip);
+					GridButton currentButton = playerGrid.get(xShip);
 					if (!currentButton.isShipPart()) {
 						shipParts.add(currentButton);
 					}
@@ -131,7 +145,7 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 				for (int i = 0; i < numberOfParts; i++)
 				{
 					xShip = shipStart - i;
-					GridButton currentButton = this.grid.get(xShip);
+					GridButton currentButton = playerGrid.get(xShip);
 					if (!currentButton.isShipPart()) {
 						shipParts.add(currentButton);
 					}
@@ -147,7 +161,7 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 			{
 				for (int i = 0; i < numberOfParts; i++) {
 					yShip = shipStart + i*10;
-					GridButton currentButton = this.grid.get(yShip);
+					GridButton currentButton = playerGrid.get(yShip);
 					if (!currentButton.isShipPart()) {
 						shipParts.add(currentButton);
 					}
@@ -159,7 +173,7 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 			else {
 				for (int i = 0; i < numberOfParts; i++) {
 					yShip = shipStart - i*10;
-					GridButton currentButton = this.grid.get(yShip);
+					GridButton currentButton = playerGrid.get(yShip);
 					if (!currentButton.isShipPart()) {
 						shipParts.add(currentButton);
 					}
@@ -186,56 +200,119 @@ public class PlayerGrid implements Serializable, PropertyChangeListener{
 	/**
 	 * @return the username
 	 */
-	public String getUsername() {
-		return username;
+	public String getPlayer1Name() {
+		return this.player1;
+	}
+	
+	/**
+	 * @return the username
+	 */
+	public String getPlayer2Name() {
+		return this.player2;
 	}
 
 	/**
 	 * @return the grid
 	 */
-	public ArrayList<GridButton> getGrid() {
-		return grid;
+	public ArrayList<GridButton> getPlayer1Grid() {
+		return this.player1Grid;
+	}
+	
+	/**
+	 * @return the grid
+	 */
+	public ArrayList<GridButton> getPlayer2Grid() {
+		return this.player2Grid;
 	}
 
 	/**
 	 * @return the ships
 	 */
-	public ArrayList<Ship> getShips() {
-		return ships;
+	public ArrayList<Ship> getPlayer1Ships() {
+		return this.player1Ships;
+	}
+	
+	/**
+	 * @return the ships
+	 */
+	public ArrayList<Ship> getPlayer2Ships() {
+		return this.player2Ships;
 	}
 
 	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
+	public synchronized void propertyChange(PropertyChangeEvent evt) {
 		Attack attack = (Attack) evt.getNewValue();
-		int destroyed = 0;
-		
-		for (Ship ship: ships) {
-			
-			for (GridButton part: ship.getShipParts()) {
-				int x = part.getX_location();
-				int y = part.getY_location();
-				
-				if (x == attack.getX() && y == attack.getY()) {
-					part.hit();
-					ship.hit();
-					attack.hit();
-					
-					if (ship.isDestroyed()) 
-						attack.setShip(ship);
+		InputOutputHandler ioHandler = (InputOutputHandler) evt.getSource();
+
+		if (attack.isGameOver()) {
+			this.playAgain++;
+
+			if (attack.getUsername().equals(this.player1)) {
+
+				if (attack.getX() == 1) {
+					this.player1PlayAgain = true;
 				}
-				
+			} else {
+
+				if (attack.getX() == 1) {
+					this.player2PlayAgain = true;
+				}
+			}
+			
+			if (this.playAgain == 2) {
+
+				if (this.player2PlayAgain && this.player1PlayAgain) {
+					this.startNewGame();
+					ioHandler.playAgain(this);
+				} else {
+					if (!this.player1PlayAgain) {
+						ioHandler.closeSocket(this.player1);
+					}
+					
+					if (!this.player2PlayAgain) {
+						ioHandler.closeSocket(this.player2);
+					}
+				}
+			}			
+
+		} else {
+
+			ArrayList<Ship> ships = this.player1Ships;
+
+			if (attack.getUsername() == this.player1) 
+				ships = this.player2Ships;
+
+			int destroyed = 0;
+
+			for (Ship ship: ships) {
+
+				for (GridButton part: ship.getShipParts()) {
+					int x = part.getX_location();
+					int y = part.getY_location();
+
+					if (x == attack.getX() && y == attack.getY()) {
+						part.hit();
+						ship.hit();
+						attack.hit();
+
+						if (ship.isDestroyed()) 
+							attack.setShip(ship);
+
+						break;
+					}
+				}
+
 				if (ship.isDestroyed()) 
 					destroyed++;
 			}
+
+			if (destroyed == ships.size()) {
+				attack.gameOver();
+			}
+
+			ioHandler.sendToPlayer(attack);
+			ioHandler.sendBackToOpponent(attack);
 		}
-		
-		if (destroyed == ships.size()) {
-			attack.gameOver();
-		}
-		
-		InputOutputHandler ioHandler = (InputOutputHandler) evt.getSource();
-		ioHandler.sendToPlayer(attack);
-		ioHandler.sendBackToOpponent(attack);
 	}
 	
 }

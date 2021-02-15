@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -209,7 +210,6 @@ public class ClientGUI {
 
 		//adds a listener to the send button for sending messages
 		sendButton.addActionListener((ActionEvent a) -> {
-
 			String text = inputMessage.getText();
 
 			Message send = new Message(username, text);
@@ -272,8 +272,10 @@ public class ClientGUI {
 			objectOutputStream.close();
 			objectInputStream.close();
 			socket.close();
-		} catch (IOException e) {
 			this.addMessage("Disconnected to server.");
+			this.addMessage("Click connect to play again.");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -312,9 +314,10 @@ public class ClientGUI {
 		this.frame.setVisible(true);
 	}
 	
-	public void displayShips(PlayerGrid playerGrid) {
-		for (int i = 0; i < playerGrid.getGrid().size(); i++) {
-			if (playerGrid.getGrid().get(i).isShipPart()) {
+	public void displayShips(ArrayList<GridButton> userGrid) {
+
+		for (int i = 0; i < userGrid.size(); i++) {
+			if (userGrid.get(i).isShipPart()) {
 				this.myGrid.get(i).getButton().setBackground(Color.LIGHT_GRAY);
 			}
 			else
@@ -330,6 +333,10 @@ public class ClientGUI {
 		if (username.equals(this.username)) {
 			updateGrid = this.opponentGrid;
 		}
+		else
+		{
+			this.turn();
+		}
 		
 		for (GridButton gridButton: updateGrid) {
 			int x = gridButton.getX_location();
@@ -337,6 +344,7 @@ public class ClientGUI {
 			JButton button = gridButton.getButton();
 
 			if (x == attack.getX() && y == attack.getY()) {
+				gridButton.hit();
 				if (attack.isHit()) {
 					button.setBackground(Color.RED);
 					this.addMessage("A ship has been hit!");
@@ -351,7 +359,7 @@ public class ClientGUI {
 
 		if (attack.getShips() != null) {
 			Ship ship = attack.getShips();
-			this.addMessage(ship.getShipType() + " has been sunked by " + attack.getUsername());
+			this.addMessage(ship.getShipType() + " has been sunk by " + attack.getUsername());
 
 			for (GridButton part: ship.getShipParts()) {
 				int xShip = part.getX_location();
@@ -371,7 +379,7 @@ public class ClientGUI {
 		}
 
 		if (attack.isGameOver()) {
-			this.gameOver();
+			this.gameOver(attack);
 		}
 	}
 	
@@ -387,8 +395,35 @@ public class ClientGUI {
 		}
 	}
 	
-	private void gameOver() {
-		
+	private void gameOver(Attack attack) {
+		this.endTurn();
+		int playAgain = JOptionPane.showConfirmDialog(this.frame, "Game over. " + attack.getUsername() + " sunk all enemy ships. ", "Would you like to play again?", JOptionPane.YES_NO_OPTION);
+
+		try {
+			if (playAgain == JOptionPane.YES_OPTION) {
+				Attack newGame = new Attack(1, 1, this.username);
+				newGame.gameOver();
+
+				this.objectOutputStream.writeObject(newGame);
+				
+				for (GridButton gridButton: this.opponentGrid) {
+					gridButton.getButton().setBackground(Color.BLUE);
+				}
+				
+			}
+			else {
+
+				Attack newGame = new Attack(0, 0, this.username);
+				newGame.gameOver();
+
+				this.objectOutputStream.writeObject(newGame);
+
+				this.disconnectToNetwork();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

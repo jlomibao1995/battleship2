@@ -2,6 +2,7 @@ package client;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import problemdomain.Attack;
@@ -46,13 +47,16 @@ public class ServerConnection implements Runnable {
 				
 				if (receive instanceof Message) {
 					Message message = (Message) receive;
+					if (message.getUsername().equals("xxxx0000")) {
+						this.client.sendMessage(new Message(this.client.getUsername(), "Ready to play!"));
+					}
 					this.client.addMessage(message.toString());
 					
 					if (message.getMessage().equals("Your turn"))
 						this.client.turn();
 				}
-				else if (receive instanceof PlayerGrid) {
-					this.client.displayShips((PlayerGrid) receive);
+				else if (receive instanceof ArrayList<?>) {
+					this.client.displayShips((ArrayList<GridButton>) receive);
 				}
 				else if (receive instanceof Attack) {
 					Attack attack = (Attack) receive;
@@ -61,6 +65,9 @@ public class ServerConnection implements Runnable {
 			} 
 			catch (ClassNotFoundException e) {
 				e.printStackTrace();
+			}
+			catch (SocketException e) {
+				this.client.addMessage("Disconnected to server");
 			}
 			catch (IOException e) {
 				e.printStackTrace();

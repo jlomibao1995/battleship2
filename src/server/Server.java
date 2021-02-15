@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import javax.swing.JOptionPane;
@@ -84,7 +85,9 @@ public class Server{
 				}
 
 			}
-
+			catch (SocketException e) {
+				this.serverGUI.addMessage("Client disconnected");
+			}
 			catch (IOException e) {
 				e.printStackTrace();
 				this.serverGUI.addMessage("Unable to connect to client.");

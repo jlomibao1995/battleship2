@@ -28,7 +28,6 @@ public class Attack implements Serializable{
 	 * @param username
 	 */
 	public Attack(int x, int y, String username) {
-		super();
 		this.x = x;
 		this.y = y;
 		this.username = username;
